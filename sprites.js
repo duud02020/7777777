@@ -6,39 +6,9 @@ class Sprite {
         this.color = color;
     }
     draw(ctx) {
-        // Personagens mais estilosos (neon e gradiente)
-        ctx.save();
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 20;
-
-        let gradient = ctx.createLinearGradient(
-            this.position.x, this.position.y,
-            this.position.x, this.position.y + this.height
-        );
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(0.1, this.color);
-        gradient.addColorStop(1, '#050505');
-
-        ctx.fillStyle = gradient;
-        
-        // Efeito de cantos arredondados
-        ctx.beginPath();
-        if(ctx.roundRect) {
-            ctx.roundRect(this.position.x, this.position.y, this.width, this.height, 8);
-        } else {
-            ctx.rect(this.position.x, this.position.y, this.width, this.height);
-        }
-        ctx.fill();
-
-        // Adicionando um "olho" cibernético brilhante
-        ctx.fillStyle = '#fff';
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 10;
-        // Simples lógica matemática: se a cor for verde (P1), olho na direita.
-        let eyeDirection = (this.color === '#00ff00') ? this.width - 15 : 5; 
-        ctx.fillRect(this.position.x + eyeDirection, this.position.y + 20, 10, 6);
-
-        ctx.restore();
+        // Sprite default form
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
     }
     update(ctx) {
         this.draw(ctx);
@@ -68,11 +38,76 @@ class Fighter extends Sprite {
     }
 
     draw(ctx) {
-        super.draw(ctx);
-        // Desenhando hitbox de ataque se estiver atacando
+        // Desenho estilo "Stickman Guerreiro de Neon"
+        ctx.save();
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 15;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const cx = this.position.x + this.width / 2;
+        const cy = this.position.y;
+        
+        // Direção que o jogador está virado (baseada no offset do attackBox no game.js)
+        const dir = this.attackBox.offset.x === 0 ? 1 : -1;
+        
+        ctx.beginPath();
+        
+        // Cabeça
+        ctx.arc(cx, cy + 25, 18, 0, Math.PI * 2);
+        
+        // Corpo/Coluna
+        ctx.moveTo(cx, cy + 43);
+        ctx.lineTo(cx, cy + 90);
+        
+        // Perna de Trás
+        ctx.moveTo(cx, cy + 90);
+        ctx.lineTo(cx - 20 * dir, cy + 140);
+
+        // Perna da Frente (com animação de chute)
+        ctx.moveTo(cx, cy + 90);
+        if (this.isAttacking && this.attackType === 'kick') {
+            ctx.lineTo(cx + 60 * dir, cy + 80); // Chute alto
+        } else {
+            ctx.lineTo(cx + 25 * dir, cy + 140); // Base normal
+        }
+        
+        // Braço de Trás
+        ctx.moveTo(cx, cy + 55);
+        ctx.lineTo(cx - 20 * dir, cy + 85);
+        
+        // Braço da Frente (com animação de soco/especial)
+        ctx.moveTo(cx, cy + 55);
+        if (this.isAttacking) {
+            if (this.attackType === 'punch') {
+                ctx.lineTo(cx + 60 * dir, cy + 55); // Soco reto
+            } else if (this.attackType === 'special') {
+                ctx.lineTo(cx + 50 * dir, cy + 30); // Gancho/especial
+            } else {
+                ctx.lineTo(cx + 25 * dir, cy + 75); // Normal no chute
+            }
+        } else {
+            ctx.lineTo(cx + 25 * dir, cy + 75); // Guarda alta
+        }
+        
+        ctx.stroke();
+
+        // Olho (Brilho focado)
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(cx + 8 * dir, cy + 20, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Hitbox Visual (Impacto)
         if (this.isAttacking) {
             ctx.save();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillStyle = (this.attackType === 'special') ? 'rgba(0, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)';
             ctx.shadowColor = '#fff';
             ctx.shadowBlur = 20;
             ctx.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
@@ -109,15 +144,20 @@ class Fighter extends Sprite {
     attack(type) {
         this.isAttacking = true;
         this.attackType = type;
-        if (type === 'punch') this.damage = 10;
-        else if (type === 'kick') this.damage = 15;
-        else if (type === 'special') {
+        if (type === 'punch') {
+            this.damage = 10;
+            this.attackBox.width = 100;
+        } else if (type === 'kick') {
+            this.damage = 15;
+            this.attackBox.width = 120;
+        } else if (type === 'special') {
             this.damage = 30;
             this.mana = 0;
+            this.attackBox.width = 150;
         }
         setTimeout(() => {
             this.isAttacking = false;
-        }, 100);
+        }, 150);
     }
     
     takeHit(damage) {

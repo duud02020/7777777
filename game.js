@@ -163,13 +163,29 @@ function checkHit(attacker, defender, multiplier = 1) {
 
 const bgColors = ['#222222', '#331111', '#113311', '#111133', '#333311'];
 
+const bgImage = new Image();
+bgImage.src = 'assets/bg.png';
+
 function animate(currentTime) {
     window.requestAnimationFrame(animate);
-    ctx.fillStyle = bgColors[(level - 1) % bgColors.length] || '#222222';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    if (bgImage.complete && bgImage.naturalWidth !== 0) {
+        ctx.globalAlpha = 0.5 + (0.1 * level); // Fica um pouco mais escuro ou diferente
+        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1.0;
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+        ctx.fillStyle = bgColors[(level - 1) % bgColors.length] || '#222222';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Renderizar "Chão"
-    ctx.fillStyle = '#666';
+    const floorGradient = ctx.createLinearGradient(0, canvas.height - 50, 0, canvas.height);
+    floorGradient.addColorStop(0, '#444');
+    floorGradient.addColorStop(1, '#111');
+    ctx.fillStyle = floorGradient;
     ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
 
     player.update(ctx, canvas.height);

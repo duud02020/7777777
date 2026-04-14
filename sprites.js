@@ -6,8 +6,39 @@ class Sprite {
         this.color = color;
     }
     draw(ctx) {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+        // Personagens mais estilosos (neon e gradiente)
+        ctx.save();
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 20;
+
+        let gradient = ctx.createLinearGradient(
+            this.position.x, this.position.y,
+            this.position.x, this.position.y + this.height
+        );
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(0.1, this.color);
+        gradient.addColorStop(1, '#050505');
+
+        ctx.fillStyle = gradient;
+        
+        // Efeito de cantos arredondados
+        ctx.beginPath();
+        if(ctx.roundRect) {
+            ctx.roundRect(this.position.x, this.position.y, this.width, this.height, 8);
+        } else {
+            ctx.rect(this.position.x, this.position.y, this.width, this.height);
+        }
+        ctx.fill();
+
+        // Adicionando um "olho" cibernético brilhante
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 10;
+        // Simples lógica matemática: se a cor for verde (P1), olho na direita.
+        let eyeDirection = (this.color === '#00ff00') ? this.width - 15 : 5; 
+        ctx.fillRect(this.position.x + eyeDirection, this.position.y + 20, 10, 6);
+
+        ctx.restore();
     }
     update(ctx) {
         this.draw(ctx);
@@ -40,8 +71,12 @@ class Fighter extends Sprite {
         super.draw(ctx);
         // Desenhando hitbox de ataque se estiver atacando
         if (this.isAttacking) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 20;
             ctx.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+            ctx.restore();
         }
     }
 

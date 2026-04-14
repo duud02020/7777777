@@ -22,7 +22,7 @@ let player = new Fighter({
     velocity: { x: 0, y: 0 },
     color: '#00ff00',
     offset: { x: 100, y: 50 },
-    width: 200, height: 250
+    width: 240, height: 280
 });
 
 let enemy = new Fighter({
@@ -30,7 +30,7 @@ let enemy = new Fighter({
     velocity: { x: 0, y: 0 },
     color: '#ff0000',
     offset: { x: -150, y: 50 },
-    width: 200, height: 250
+    width: 240, height: 280
 });
 
 const keys = { a: { pressed: false }, d: { pressed: false } };

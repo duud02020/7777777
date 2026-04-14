@@ -269,7 +269,7 @@ canvas {
     text-align: center; z-index: 100;
 }
 
-/* Personagens Híbridos (DOM) - SOLUÇÃO DE TRANSPARÊNCIA */
+/* Personagens Híbridos (DOM) - SOLUÇÃO DEFINITIVA DE TRANSPARÊNCIA */
 .fighter-sprite {
     position: absolute;
     width: 200px;
@@ -279,8 +279,7 @@ canvas {
     background-position: bottom center;
     pointer-events: none;
     z-index: 5;
-    mix-blend-mode: multiply; /* APAGA O BRANCO AUTOMATICAMENTE */
-    filter: brightness(1.2) contrast(1.1); /* Mantém vivo */
+    filter: url(#remove-white) brightness(1.2); /* MÁGICA SVG: Remove o branco e mantém o brilho */
     transition: none;
 }
 

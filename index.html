@@ -18,10 +18,11 @@
             
             <div class="selection-arena">
                 
-                <!-- Botões de Modo em cima da Arena -->
-                <div class="mode-select-container" style="position: absolute; top: 110px; width: 100%; text-align: center; left: 0; z-index: 100;">
-                    <button class="mode-btn active" id="btn-arcade" onclick="setMode('arcade')">🎮 ARCADE</button>
-                    <button class="mode-btn" id="btn-tutorial" onclick="setMode('tutorial')">🎓 TUTORIAL</button>
+                <!-- Botões de Modo em cima da Arena (BEM VISÍVEIS) -->
+                <div class="mode-select-container" style="position: absolute; top: 120px; width: 100%; text-align: center; left: 0; z-index: 100;">
+                    <div style="font-family: 'Press Start 2P', cursive; color: #fff; font-size: 12px; margin-bottom: 15px; opacity: 0.8;">SELECIONE O MODO:</div>
+                    <button class="mode-btn active" id="btn-arcade" onclick="setMode('arcade')">FIGHT (ARCADE)</button>
+                    <button class="mode-btn" id="btn-tutorial" onclick="setMode('tutorial')">TUTORIAL</button>
                 </div>
 
                 <!-- Player 1 Portrait -->
@@ -113,7 +114,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="sprites.js?v=8"></script>
-    <script src="game.js?v=8"></script>
+    <script src="sprites.js?v=9"></script>
+    <script src="game.js?v=9"></script>
 </body>
 </html>

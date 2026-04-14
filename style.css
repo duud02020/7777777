@@ -238,28 +238,32 @@ canvas {
 
 .mode-btn {
     font-family: 'Press Start 2P', cursive;
-    background: transparent;
-    color: #555;
-    border: 2px solid #555;
-    padding: 10px 20px;
-    font-size: 14px;
-    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #666;
+    border: 3px solid #444;
+    padding: 15px 30px;
+    font-size: 18px;
+    border-radius: 8px;
     cursor: pointer;
-    margin: 0 10px;
-    transition: all 0.2s;
+    margin: 0 20px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-transform: uppercase;
 }
 
 .mode-btn:hover {
-    color: #fff;
+    transform: scale(1.1);
     border-color: #fff;
-    text-shadow: 0 0 10px #fff;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
 .mode-btn.active {
-    color: #ffea00;
-    border-color: #ffea00;
-    box-shadow: 0 0 15px rgba(255, 234, 0, 0.5);
-    text-shadow: 0 0 10px #ffea00;
+    color: #00ffcc;
+    border-color: #00ffcc;
+    background: rgba(0, 255, 204, 0.15);
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.6), inset 0 0 15px rgba(0, 255, 204, 0.3);
+    text-shadow: 0 0 10px #00ffcc;
+    transform: scale(1.15);
 }
 
 #controls-hint {

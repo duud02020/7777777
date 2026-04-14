@@ -39,7 +39,11 @@ class Sprite {
         
         if (imageSrc) {
             this.image.src = imageSrc;
-            this.image.onload = () => { this.removeBackground(); };
+            if (this.image.complete) {
+                this.removeBackground();
+            } else {
+                this.image.onload = () => { this.removeBackground(); };
+            }
         }
     }
 
@@ -49,11 +53,22 @@ class Sprite {
         tempCanvas.width = this.image.width;
         tempCanvas.height = this.image.height;
         tempCtx.drawImage(this.image, 0, 0);
+        
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
         const data = imgData.data;
+
+        // CHROMA KEY AGRESSIVO (Apaga qualquer coisa próxima ao branco/claro)
         for (let i = 0; i < data.length; i += 4) {
-            if (data[i] > 200 && data[i+1] > 200 && data[i+2] > 200) data[i+3] = 0;
+            const r = data[i];
+            const g = data[i+1];
+            const b = data[i+2];
+            
+            // Se o pixel for coletivamente muito claro (soma dos canais alta)
+            if (r + g + b > 550) { 
+                data[i + 3] = 0; 
+            }
         }
+
         tempCtx.putImageData(imgData, 0, 0);
         this.processedImage = new Image();
         this.processedImage.src = tempCanvas.toDataURL();
@@ -73,7 +88,7 @@ class Fighter extends Sprite {
         this.isGrounded = false;
         this.health = 100;
         this.mana = 0;
-        this.attackBox = { position: { x: this.position.x, y: this.position.y }, offset, width: 120, height: 60 };
+        this.attackBox = { position: { x: this.position.x, y: this.position.y }, offset, width: 140, height: 80 };
         this.isAttacking = false;
         this.attackType = null;
         this.dead = false;
@@ -81,7 +96,6 @@ class Fighter extends Sprite {
         this.speed = 5;
         this.dmgMult = 1;
         
-        // ANIMAÇÃO PROCEDURAL
         this.animTimer = 0;
         this.scaleY = 1;
         this.tilt = 0;
@@ -92,35 +106,44 @@ class Fighter extends Sprite {
         let drawImg = this.processedImage || (this.image.complete ? this.image : null);
         this.animTimer += 0.1;
 
-        // Lógica de Deformação (Efeito de Respiração e Movimento)
         if (!this.dead) {
-            this.scaleY = 1 + Math.sin(this.animTimer) * 0.02; // Respiração lenta
+            this.scaleY = 1 + Math.sin(this.animTimer) * 0.02;
             if (Math.abs(this.velocity.x) > 0) {
-                this.tilt = (this.velocity.x > 0 ? 0.05 : -0.05); // Inclina ao correr
+                this.tilt = (this.velocity.x > 0 ? 0.05 : -0.05);
             } else {
                 this.tilt *= 0.8;
             }
-            if (!this.isGrounded) {
-                this.scaleY = 1.1; // Estica no ar
-            }
+            if (!this.isGrounded) this.scaleY = 1.15;
         }
 
         ctx.save();
         
-        // Aplica transformações no centro do personagem
+        // POSIÇÃO E TRANSFORMAÇÃO
         const midX = this.position.x + this.width / 2;
         const midY = this.position.y + this.height;
         ctx.translate(midX, midY);
         
+        // EFEITO DE HIT (FLASH)
         if (this.isHit) {
             ctx.filter = 'brightness(5) contrast(2)';
             ctx.translate((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
         }
 
+        // AURA ELEMENTAL (Substitui o fundo quadrado)
+        ctx.save();
+        ctx.globalAlpha = 0.3 + Math.sin(this.animTimer) * 0.1;
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = this.color;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(0, -this.height/2, this.width/3, this.height/2, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
         ctx.rotate(this.tilt + this.rotation);
         ctx.scale(1, this.scaleY);
         
-        // Direção
+        // DIREÇÃO
         const dir = this.attackBox.offset.x >= 0 ? 1 : -1;
         ctx.scale(dir, 1);
 
@@ -130,16 +153,12 @@ class Fighter extends Sprite {
         
         ctx.restore();
 
-        // FX de Ataque (Animação Visual)
+        // HITBOX VISUAL (Sutil para gameplay profissional)
         if (this.isAttacking) {
             ctx.save();
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = this.color;
-            ctx.fillStyle = (this.attackType === 'special') ? 'rgba(0, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)';
-            // Desenha um "flash" de ataque na frente
-            ctx.beginPath();
-            ctx.arc(this.attackBox.position.x + this.attackBox.width/2, this.attackBox.position.y + this.attackBox.height/2, 40, 0, Math.PI*2);
-            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
             ctx.restore();
         }
     }
@@ -170,15 +189,13 @@ class Fighter extends Sprite {
     attack(type) {
         this.isAttacking = true;
         this.attackType = type;
-        
-        // Animação de Avanço no ataque
         const dir = this.attackBox.offset.x >= 0 ? 1 : -1;
         this.rotation = 0.1 * dir;
-        this.position.x += 15 * dir;
+        this.position.x += 20 * dir;
 
         if (type === 'punch') { this.attackBox.width = 160; }
-        else if (type === 'kick') { this.attackBox.width = 190; }
-        else if (type === 'special') { this.attackBox.width = 280; this.mana = 0; }
+        else if (type === 'kick') { this.attackBox.width = 200; }
+        else if (type === 'special') { this.attackBox.width = 300; this.mana = 0; }
         
         setTimeout(() => { 
             this.isAttacking = false; 
@@ -189,10 +206,8 @@ class Fighter extends Sprite {
     takeHit(damage) {
         this.health -= damage;
         this.isHit = true;
-        // Recuo no hit
         const dir = this.attackBox.offset.x >= 0 ? -1 : 1;
-        this.position.x += 20 * dir;
-        
+        this.position.x += 30 * dir;
         setTimeout(() => { this.isHit = false; }, 120);
         if (this.health <= 0) { this.health = 0; this.dead = true; }
     }

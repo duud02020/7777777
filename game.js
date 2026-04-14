@@ -14,10 +14,10 @@ let tutorialStep = 0;
 
 // Configs dos personagens
 const CHARACTERS = {
-    'cyber': { color: '#00ff00', speed: 6, dmgBase: 1, manaRegen: 1 },
-    'inferno': { color: '#ff0000', speed: 4, dmgBase: 1.5, manaRegen: 1 },
-    'frost': { color: '#00d9ff', speed: 5, dmgBase: 1.2, manaRegen: 1.5 },
-    'gold': { color: '#ffea00', speed: 5, dmgBase: 1.2, manaRegen: 1.2 }
+    'hanzo': { color: '#555555', speed: 6, dmgBase: 1, manaRegen: 1 },
+    'ignis': { color: '#ff3300', speed: 4, dmgBase: 1.5, manaRegen: 1 },
+    'glacius': { color: '#00d9ff', speed: 5, dmgBase: 1.2, manaRegen: 1.5 },
+    'aurum': { color: '#ffea00', speed: 5, dmgBase: 1.2, manaRegen: 1.2 }
 };
 
 let player = new Fighter({
@@ -66,10 +66,16 @@ function decreaseTimer() {
 // Logica visual de Preview na Roster
 window.previewCharacter = function(charKey, name, color) {
     document.getElementById('p1-preview-name').innerText = name;
-    document.getElementById('p1-silhouette').style.background = color;
-    document.getElementById('p1-silhouette').style.boxShadow = `0 0 40px ${color}`;
-    document.getElementById('p1-silhouette').innerText = "";
-    document.getElementById('p1-big-portrait').style.borderColor = color;
+    
+    // Tenta carregar a imagem fantástica se o usuário a salvou!
+    let portrait = document.getElementById('p1-big-portrait');
+    portrait.style.borderColor = color;
+    portrait.style.backgroundImage = `url('assets/${charKey}.png')`;
+    portrait.style.backgroundSize = 'cover';
+    portrait.style.backgroundPosition = 'center';
+
+    // Remove a silhueta padrão se tiver imagem
+    document.getElementById('p1-silhouette').style.display = 'none';
 };
 
 window.setMode = function(mode) {

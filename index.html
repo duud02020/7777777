@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Duel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Overlay UI (Heads Up Display) -->
+        <div id="ui-layer">
+            <div id="level-display">Level <span id="level-number">1</span></div>
+            <div id="status-bars">
+                <!-- Player 1 (Left) -->
+                <div class="player-status player-1">
+                    <div class="health-bar-container">
+                        <div class="health-bar" id="p1-health"></div>
+                        <div class="health-bar-bg"></div>
+                    </div>
+                    <div class="mana-bar-container">
+                        <div class="mana-bar" id="p1-mana"></div>
+                    </div>
+                    <div class="player-name">Player</div>
+                </div>
+
+                <!-- Timer -->
+                <div id="timer">60</div>
+
+                <!-- Player 2 (Right - AI) -->
+                <div class="player-status player-2">
+                    <div class="health-bar-container">
+                        <div class="health-bar" id="p2-health"></div>
+                        <div class="health-bar-bg"></div>
+                    </div>
+                    <div class="mana-bar-container">
+                        <div class="mana-bar" id="p2-mana"></div>
+                    </div>
+                    <div class="player-name">AI Opponent</div>
+                </div>
+            </div>
+            
+            <div id="message-display" style="display: none;">Fight!</div>
+            <div id="controls-hint">P1: W/A/S/D Move | Space Jump | J: Punch, K: Kick, L: Special</div>
+        </div>
+
+        <canvas id="game-canvas" width="1024" height="576"></canvas>
+    </div>
+
+    <!-- Scripts -->
+    <script src="sprites.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

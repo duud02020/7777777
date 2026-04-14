@@ -8,15 +8,24 @@ let aiDamageMultiplier = 1;
 let timer = 60;
 let timerId;
 let gameFinished = false;
+let isStarted = false;
 
-const player = new Fighter({
+// Configs dos personagens
+const CHARACTERS = {
+    'cyber': { color: '#00ff00', speed: 6, dmgBase: 1, manaRegen: 1 },
+    'inferno': { color: '#ff0000', speed: 4, dmgBase: 1.5, manaRegen: 1 },
+    'frost': { color: '#00d9ff', speed: 5, dmgBase: 1.2, manaRegen: 1.5 },
+    'gold': { color: '#ffea00', speed: 5, dmgBase: 1.2, manaRegen: 1.2 }
+};
+
+let player = new Fighter({
     position: { x: 200, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#00ff00',
     offset: { x: 0, y: 0 }
 });
 
-const enemy = new Fighter({
+let enemy = new Fighter({
     position: { x: 800, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#ff0000',
@@ -39,6 +48,7 @@ function rectangularCollision({ rectangle1, rectangle2 }) {
 }
 
 function decreaseTimer() {
+    if (!isStarted) return;
     if (timer > 0) {
         timerId = setTimeout(decreaseTimer, 1000);
         timer--;
@@ -49,6 +59,31 @@ function decreaseTimer() {
         determineWinner({ player, enemy, timerId });
     }
 }
+
+// Lançado via onclick do HTML 
+window.selectCharacter = function(charKey) {
+    document.getElementById('char-select').style.display = 'none';
+    document.getElementById('ui-layer').style.display = 'flex';
+    
+    // Settando player
+    const pData = CHARACTERS[charKey];
+    player.color = pData.color;
+    player.dmgMult = pData.dmgBase;
+    player.speed = pData.speed;
+    document.getElementById('p1-name').innerText = charKey.toUpperCase();
+
+    // Sorteando Inimigo (IA)
+    const keys = Object.keys(CHARACTERS);
+    const aiKey = keys[Math.floor(Math.random() * keys.length)];
+    const aiData = CHARACTERS[aiKey];
+    enemy.color = aiData.color;
+    enemy.dmgMult = aiData.dmgBase;
+    enemy.speed = aiData.speed;
+    document.getElementById('p2-name').innerText = "IA " + aiKey.toUpperCase();
+
+    isStarted = true;
+    decreaseTimer();
+};
 
 function determineWinner({ player, enemy, timerId }) {
     clearTimeout(timerId);
@@ -81,8 +116,6 @@ function resetLevel() {
 }
 
 function resetGameStats() {
-    player.health = 100;
-    player.mana = 0;
     player.dead = false;
     player.position = { x: 200, y: 0 };
     
@@ -90,6 +123,12 @@ function resetGameStats() {
     enemy.mana = 0;
     enemy.dead = false;
     enemy.position = { x: 800, y: 0 };
+    
+    // Sortear um novo vilão no Next Level?!
+    const keys = Object.keys(CHARACTERS);
+    const aiKey = keys[Math.floor(Math.random() * keys.length)];
+    enemy.color = CHARACTERS[aiKey].color;
+    document.getElementById('p2-name').innerText = "IA " + aiKey.toUpperCase();
     
     timer = 60;
     document.getElementById('timer').innerText = timer;
@@ -192,10 +231,11 @@ function animate(currentTime) {
     enemy.update(ctx, canvas.height);
 
     player.velocity.x = 0;
+    let baseSpeed = player.speed || 5;
     if (keys.a.pressed && player.position.x > 0) {
-        player.velocity.x = -5;
+        player.velocity.x = -baseSpeed;
     } else if (keys.d.pressed && player.position.x < canvas.width - player.width) {
-        player.velocity.x = 5;
+        player.velocity.x = baseSpeed;
     }
 
     if (player.position.x < enemy.position.x) {
@@ -210,7 +250,6 @@ function animate(currentTime) {
 }
 
 animate(0);
-decreaseTimer();
 
 window.addEventListener('keydown', (event) => {
     if (!player.dead && !gameFinished) {

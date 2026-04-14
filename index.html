@@ -11,11 +11,39 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Overlay UI (Heads Up Display) -->
-        <div id="ui-layer">
+        
+        <!-- Tela de Seleção de Personagens -->
+        <div id="char-select">
+            <h1 class="select-title">ESCOLHA SEU LUTADOR</h1>
+            <div class="char-roster">
+                <div class="char-card" onclick="selectCharacter('cyber')">
+                    <div class="char-color" style="background:#00ff00; box-shadow: 0 0 20px #00ff00;"></div>
+                    <h3>Cyber (Verde)</h3>
+                    <p>Rápido</p>
+                </div>
+                <div class="char-card" onclick="selectCharacter('inferno')">
+                    <div class="char-color" style="background:#ff0000; box-shadow: 0 0 20px #ff0000;"></div>
+                    <h3>Inferno (Vermelho)</h3>
+                    <p>Forte</p>
+                </div>
+                <div class="char-card" onclick="selectCharacter('frost')">
+                    <div class="char-color" style="background:#00d9ff; box-shadow: 0 0 20px #00d9ff;"></div>
+                    <h3>Frost (Azul)</h3>
+                    <p>Mago</p>
+                </div>
+                <div class="char-card" onclick="selectCharacter('gold')">
+                    <div class="char-color" style="background:#ffea00; box-shadow: 0 0 20px #ffea00;"></div>
+                    <h3>Gold (Amarelo)</h3>
+                    <p>Balanceado</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay UI (HUD) - Oculto até escolher -->
+        <div id="ui-layer" style="display: none;">
             <div id="level-display">Level <span id="level-number">1</span></div>
             <div id="status-bars">
-                <!-- Player 1 (Left) -->
+                <!-- Player 1 -->
                 <div class="player-status player-1">
                     <div class="health-bar-container">
                         <div class="health-bar" id="p1-health"></div>
@@ -24,13 +52,13 @@
                     <div class="mana-bar-container">
                         <div class="mana-bar" id="p1-mana"></div>
                     </div>
-                    <div class="player-name">Player</div>
+                    <div class="player-name" id="p1-name">Jogador</div>
                 </div>
 
                 <!-- Timer -->
                 <div id="timer">60</div>
 
-                <!-- Player 2 (Right - AI) -->
+                <!-- Player 2 -->
                 <div class="player-status player-2">
                     <div class="health-bar-container">
                         <div class="health-bar" id="p2-health"></div>
@@ -39,19 +67,19 @@
                     <div class="mana-bar-container">
                         <div class="mana-bar" id="p2-mana"></div>
                     </div>
-                    <div class="player-name">AI Opponent</div>
+                    <div class="player-name" id="p2-name">Oponente IA</div>
                 </div>
             </div>
             
             <div id="message-display" style="display: none;">Fight!</div>
-            <div id="controls-hint">P1: W/A/S/D Move | Space Jump | J: Punch, K: Kick, L: Special</div>
+            <div id="controls-hint">P1: W/A/S/D Mover | Space Pular | J: Soco, K: Chute, L: Especial</div>
         </div>
 
         <canvas id="game-canvas" width="1024" height="576"></canvas>
     </div>
 
-    <!-- Scripts (Tirando cache) -->
-    <script src="sprites.js?v=5"></script>
-    <script src="game.js?v=5"></script>
+    <!-- Scripts -->
+    <script src="sprites.js?v=6"></script>
+    <script src="game.js?v=6"></script>
 </body>
 </html>

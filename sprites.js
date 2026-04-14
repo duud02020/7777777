@@ -1,17 +1,51 @@
-class Sprite {
     constructor({ position, width, height, color, imageSrc }) {
         this.position = position;
         this.width = width;
         this.height = height;
         this.color = color;
         this.image = new Image();
+        this.processedImage = null; // Versão sem fundo
+        
         if (imageSrc) {
             this.image.src = imageSrc;
+            this.image.onload = () => {
+                this.removeBackground();
+            };
         }
     }
+
+    removeBackground() {
+        // Criar um canvas temporário para processar a imagem
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = this.image.width;
+        tempCanvas.height = this.image.height;
+        
+        tempCtx.drawImage(this.image, 0, 0);
+        const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        const data = imgData.data;
+
+        // Chroma Key: Se os pixels forem quase brancos, deixa transparente (Alpha = 0)
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            // Sensibilidade do branco (ajuste se falhar)
+            if (r > 240 && g > 240 && b > 240) {
+                data[i + 3] = 0;
+            }
+        }
+
+        tempCtx.putImageData(imgData, 0, 0);
+        this.processedImage = new Image();
+        this.processedImage.src = tempCanvas.toDataURL();
+    }
+
     draw(ctx) {
-        if (this.image.src) {
-            ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        let drawImg = this.processedImage || (this.image.complete ? this.image : null);
+        
+        if (drawImg && drawImg.src) {
+            ctx.drawImage(drawImg, this.position.x, this.position.y, this.width, this.height);
         } else {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
@@ -46,24 +80,25 @@ class Fighter extends Sprite {
 
     draw(ctx) {
         // Se tiver imagem (SKIN), desenha ela em vez de palitinho
-        if (this.image.complete && this.image.naturalWidth !== 0) {
+        let drawImg = this.processedImage || (this.image.complete ? this.image : null);
+        
+        if (drawImg && drawImg.naturalWidth !== 0) {
             ctx.save();
             
-            // Inverte a imagem se estiver olhando para a esquerda
             const dir = this.attackBox.offset.x === 0 ? 1 : -1;
             if (dir === -1) {
                 ctx.translate(this.position.x + this.width, this.position.y);
                 ctx.scale(-1, 1);
-                ctx.drawImage(this.image, 0, 0, this.width, this.height);
+                ctx.drawImage(drawImg, 0, 0, this.width, this.height);
             } else {
-                ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+                ctx.drawImage(drawImg, this.position.x, this.position.y, this.width, this.height);
             }
 
-            // Brilho neon em volta da imagem da skin
+            // Brilho neon sutil em volta da imagem da skin
             ctx.shadowColor = this.color;
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 20;
             ctx.strokeStyle = this.color;
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 2;
             ctx.strokeRect(this.position.x, this.position.y, this.width, this.height);
             
             ctx.restore();

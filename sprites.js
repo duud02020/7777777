@@ -30,8 +30,9 @@
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
-            // Sensibilidade do branco (ajuste se falhar)
-            if (r > 240 && g > 240 && b > 240) {
+            
+            // Aumentando a sensibilidade para pegar sombras leves do fundo branco
+            if (r > 200 && g > 200 && b > 200) {
                 data[i + 3] = 0;
             }
         }
@@ -98,6 +99,9 @@ class Fighter extends Sprite {
             ctx.shadowColor = this.color;
             ctx.shadowBlur = 20;
             ctx.strokeStyle = this.color;
+            ctx.lineWidth = 2;
+            // Linha da Hitbox do Corpo (DEBUG)
+            ctx.strokeStyle = '#00ff00';
             ctx.lineWidth = 2;
             ctx.strokeRect(this.position.x, this.position.y, this.width, this.height);
             
@@ -170,12 +174,15 @@ class Fighter extends Sprite {
             ctx.restore();
         }
 
-        // Hitbox Visual (Impacto)
+        // Hitbox Visual de Ataque (Impacto)
         if (this.isAttacking) {
             ctx.save();
-            ctx.fillStyle = (this.attackType === 'special') ? 'rgba(0, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)';
-            ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 20;
+            ctx.strokeStyle = '#ff0000'; // Vermelho para ataque
+            ctx.lineWidth = 3;
+            ctx.strokeRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+            
+            // Efeito visual de preenchimento
+            ctx.fillStyle = (this.attackType === 'special') ? 'rgba(0, 255, 255, 0.4)' : 'rgba(255, 0, 0, 0.2)';
             ctx.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
             ctx.restore();
         }

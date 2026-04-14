@@ -21,21 +21,21 @@ const CHARACTERS = {
 };
 
 let player = new Fighter({
-    position: { x: 200, y: 0 },
+    position: { x: 100, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#00ff00',
-    offset: { x: 0, y: 0 },
-    width: 150,  // Aumentado para Skin
-    height: 200  // Aumentado para Skin
+    offset: { x: 50, y: 50 },
+    width: 200,  // Proporção corrigida (mais largo)
+    height: 250  // Proporção corrigida (mais alto)
 });
 
 let enemy = new Fighter({
-    position: { x: 800, y: 0 },
+    position: { x: 700, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#ff0000',
-    offset: { x: -50, y: 0 },
-    width: 150,  // Aumentado para Skin
-    height: 200  // Aumentado para Skin
+    offset: { x: -80, y: 50 },
+    width: 200,
+    height: 250
 });
 
 const keys = {

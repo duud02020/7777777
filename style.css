@@ -5,7 +5,7 @@
 }
 
 body {
-    background-color: #0d0e15;
+    background-color: #050505;
     color: white;
     font-family: 'Roboto', sans-serif;
     display: flex;
@@ -13,113 +13,169 @@ body {
     align-items: center;
     height: 100vh;
     overflow: hidden;
-    background: radial-gradient(circle at center, #1a1a2e 0%, #0d0e15 100%);
 }
 
 #game-container {
     position: relative;
     display: inline-block;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 15px rgba(233, 69, 96, 0.5);
-    border-radius: 8px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 1), 0 0 15px rgba(100, 150, 255, 0.2);
+    border-radius: 4px;
     overflow: hidden;
-    border: 2px solid #333;
+    border: 4px solid #111;
 }
 
 canvas {
     display: block;
-    image-rendering: pixelated;
-    background-color: #222;
+    image-rendering: auto;
+    background-color: #111;
 }
 
-/* -- CHARACTER SELECT -- */
+/* -- CHARACTER SELECT ARCADE STYLE -- */
 #char-select {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(10, 10, 15, 0.95);
+    background: radial-gradient(circle at center, #112 0%, #000 100%);
     z-index: 50;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(5px);
-}
-
-.select-title {
-    font-family: 'Press Start 2P', cursive;
-    color: #fff;
-    text-shadow: 4px 4px 0 #e94560, 0 0 20px rgba(233,69,96, 0.8);
-    font-size: 32px;
-    margin-bottom: 50px;
-    animation: glowTitle 2s infinite alternate;
-}
-
-.char-roster {
-    display: flex;
-    gap: 30px;
-}
-
-.char-card {
-    background: #1a1e24;
-    border: 3px solid #333;
-    border-radius: 10px;
     padding: 20px;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+}
+
+.vs-header {
     text-align: center;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    width: 160px;
-}
-
-.char-card:hover {
-    transform: translateY(-10px);
-    border-color: #fff;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-}
-
-.char-color {
-    width: 60px;
-    height: 100px;
-    border-radius: 30px;
-    margin: 0 auto 15px auto;
-}
-
-.char-card h3 {
-    font-family: 'Press Start 2P', cursive;
-    font-size: 10px;
-    margin-bottom: 5px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 900;
+    font-size: 32px;
     color: #fff;
+    margin-top: 10px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0px #000, 0 0 20px rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
 }
 
-.char-card p {
-    font-size: 12px;
-    color: #888;
+.vs-header span {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    color: #ffd700;
+    letter-spacing: 0;
+    text-shadow: 2px 2px 0 #000;
 }
 
-@keyframes glowTitle {
-    from { text-shadow: 2px 2px 0 #e94560, 0 0 10px #e94560; }
-    to { text-shadow: 4px 4px 0 #e94560, 0 0 30px #e94560; }
+.selection-arena {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex: 1;
+    margin-bottom: 40px;
+    padding: 0 40px;
 }
 
-/* -- HUD E TELA DE JOGO -- */
-#ui-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    padding: 20px;
+.portrait-side {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    width: 250px;
+}
+
+.portrait-side h2 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 2px 2px 0 #000;
+    height: 20px;
+}
+
+.big-portrait {
+    width: 220px;
+    height: 300px;
+    border: 2px solid #555;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+.portrait-silhouette {
+    width: 120px;
+    height: 250px;
+    background: transparent;
+    border-radius: 60px 60px 0 0;
+    transition: all 0.3s;
+    font-size: 100px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+}
+
+.p1-side .big-portrait { border-color: #aaa; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+.p2-side .big-portrait { border-color: #ff0000; box-shadow: 0 0 20px rgba(255,0,0,0.2); }
+
+.roster-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.roster-cell {
+    width: 60px;
+    height: 80px;
+    background: #222;
+    border: 2px solid #111;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.1s, border-color 0.1s;
+}
+
+.roster-cell:hover {
+    transform: scale(1.1);
+    border-color: #fff;
+    z-index: 10;
+    box-shadow: 0 0 15px rgba(255,255,255,0.8);
+}
+
+.cell-inner {
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+.roster-cell:hover .cell-inner {
+    opacity: 1;
+}
+
+.roster-cell.locked {
+    cursor: not-allowed;
+    background: #111;
+}
+.roster-cell.locked .cell-inner {
+    background: repeating-linear-gradient(45deg, #111, #111 5px, #222 5px, #222 10px);
+}
+.roster-cell.locked:hover {
+    transform: none; border-color: #111; box-shadow: none;
+}
+
+/* -- HUD DA LUTA -- */
+#ui-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; padding: 20px; display: flex; flex-direction: column;
 }
 
 #status-bars {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    width: 100%;
+    display: flex; justify-content: space-between; align-items: flex-start; width: 100%;
 }
 
 .player-status { width: 40%; display: flex; flex-direction: column; }
@@ -127,83 +183,61 @@ canvas {
 .player-2 { align-items: flex-end; }
 
 .health-bar-container {
-    width: 100%;
-    height: 30px;
-    background: rgba(0, 0, 0, 0.6);
-    border: 3px solid #fff;
-    border-radius: 4px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    width: 100%; height: 30px; background: rgba(0, 0, 0, 0.6);
+    border: 3px solid #fff; border-radius: 4px; position: relative;
+    overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.8);
 }
 
 .health-bar {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    background: #e94560;
-    width: 100%;
-    transition: width 0.2s ease-out;
-    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+    position: absolute; top: 0; height: 100%; background: #e94560; width: 100%;
+    transition: width 0.1s linear; box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .player-1 .health-bar { right: 0; transform-origin: right; }
 .player-2 .health-bar { left: 0; transform-origin: left; }
 
-.health-bar-bg {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: #ffcf40; z-index: -1;
-}
+.health-bar-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #ffcf40; z-index: -1; }
 
 .mana-bar-container {
-    width: 70%; height: 12px; background: rgba(0, 0, 0, 0.6);
-    border: 2px solid #aaa; border-radius: 0 0 4px 4px; margin-top: -2px;
-    position: relative; overflow: hidden;
+    width: 70%; height: 12px; background: rgba(0, 0, 0, 0.6); border: 2px solid #aaa;
+    border-radius: 0 0 4px 4px; margin-top: -2px; position: relative; overflow: hidden;
 }
 
 .mana-bar {
-    height: 100%; background: #0f3460; width: 0%; transition: width 0.3s ease;
+    height: 100%; background: #0f3460; width: 0%; transition: width 0.1s linear;
     box-shadow: inset 0 0 8px rgba(0, 200, 255, 0.5);
 }
-
 .player-1 .mana-bar { float: right; }
 .player-2 .mana-bar { float: left; }
 
 .player-name {
-    font-family: 'Press Start 2P', cursive; font-size: 14px;
-    color: #fff; text-shadow: 2px 2px 0 #000; margin-top: 10px;
+    font-family: 'Press Start 2P', cursive; font-size: 14px; color: #fff;
+    text-shadow: 2px 2px 0 #000; margin-top: 10px; text-transform: uppercase;
 }
 
 #timer {
-    font-family: 'Press Start 2P', cursive;
-    background: rgba(0,0,0,0.7); color: #fff; font-size: 32px;
-    padding: 15px; border: 4px solid #e94560; border-radius: 8px;
-    text-shadow: 2px 2px 0 #000; display: flex; justify-content: center;
-    align-items: center; min-width: 90px; box-shadow: 0 0 15px rgba(233, 69, 96, 0.6);
+    font-family: 'Press Start 2P', cursive; background: rgba(0,0,0,0.8); color: #fff;
+    font-size: 32px; padding: 15px; border: 4px solid #ffaa00; border-radius: 8px;
+    text-shadow: 2px 2px 0 #000; display: flex; justify-content: center; align-items: center;
+    min-width: 90px; box-shadow: 0 0 20px rgba(255, 170, 0, 0.4);
 }
 
 #level-display {
     position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
-    font-family: 'Press Start 2P', cursive; font-size: 18px; color: #f1c40f;
-    text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.5);
-    padding: 5px 15px; border-radius: 20px;
+    font-family: 'Press Start 2P', cursive; font-size: 16px; color: #f1c40f;
+    text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.7);
+    padding: 8px 15px; border-radius: 4px; border: 2px solid #444;
 }
 
 #message-display {
     position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-    font-family: 'Press Start 2P', cursive; font-size: 48px; color: #fff;
-    text-shadow: 4px 4px 0 #e94560, 0 0 20px rgba(233,69,96, 0.8);
-    text-align: center; z-index: 10; animation: pulse 1.5s infinite;
+    font-family: 'Press Start 2P', cursive; font-size: 64px; color: #fff;
+    text-shadow: 5px 5px 0 #e94560, 0 0 30px rgba(233,69,96, 0.9);
+    text-align: center; z-index: 10;
 }
 
 #controls-hint {
     position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-    font-size: 12px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.5);
-    padding: 5px 10px; border-radius: 4px;
-}
-
-@keyframes pulse {
-    0% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.1); }
-    100% { transform: translate(-50%, -50%) scale(1); }
+    font-size: 12px; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.8);
+    padding: 8px 15px; border-radius: 4px; font-weight: bold; border: 1px solid #333;
 }

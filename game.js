@@ -49,6 +49,7 @@ function rectangularCollision({ rectangle1, rectangle2 }) {
 
 function decreaseTimer() {
     if (!isStarted) return;
+// ... (resto mantido)
     if (timer > 0) {
         timerId = setTimeout(decreaseTimer, 1000);
         timer--;
@@ -59,6 +60,15 @@ function decreaseTimer() {
         determineWinner({ player, enemy, timerId });
     }
 }
+
+// Logica visual de Preview na Roster
+window.previewCharacter = function(charKey, name, color) {
+    document.getElementById('p1-preview-name').innerText = name;
+    document.getElementById('p1-silhouette').style.background = color;
+    document.getElementById('p1-silhouette').style.boxShadow = `0 0 40px ${color}`;
+    document.getElementById('p1-silhouette').innerText = "";
+    document.getElementById('p1-big-portrait').style.borderColor = color;
+};
 
 // Lançado via onclick do HTML 
 window.selectCharacter = function(charKey) {

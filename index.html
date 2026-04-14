@@ -6,44 +6,66 @@
     <title>Shadow Duel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
     <div id="game-container">
         
-        <!-- Tela de Seleção de Personagens -->
+        <!-- Tela de Seleção estilo Arcade Clássico -->
         <div id="char-select">
-            <h1 class="select-title">ESCOLHA SEU LUTADOR</h1>
-            <div class="char-roster">
-                <div class="char-card" onclick="selectCharacter('cyber')">
-                    <div class="char-color" style="background:#00ff00; box-shadow: 0 0 20px #00ff00;"></div>
-                    <h3>Cyber (Verde)</h3>
-                    <p>Rápido</p>
+            <div class="vs-header">SHADOW DUEL<br><span>CHARACTER SELECT</span></div>
+            
+            <div class="selection-arena">
+                <!-- Player 1 Portrait -->
+                <div class="portrait-side p1-side">
+                    <h2 id="p1-preview-name">ESCOLHA...</h2>
+                    <div class="big-portrait" id="p1-big-portrait">
+                        <div class="portrait-silhouette" id="p1-silhouette"></div>
+                    </div>
                 </div>
-                <div class="char-card" onclick="selectCharacter('inferno')">
-                    <div class="char-color" style="background:#ff0000; box-shadow: 0 0 20px #ff0000;"></div>
-                    <h3>Inferno (Vermelho)</h3>
-                    <p>Forte</p>
+
+                <!-- Grid de Personagens -->
+                <div class="roster-grid">
+                    <div class="roster-cell" onmouseover="previewCharacter('cyber', 'Cyber Ninja', '#00ff00')" onclick="selectCharacter('cyber')">
+                        <div class="cell-inner" style="background: linear-gradient(0deg, #00ff00 0%, #111 60%);"></div>
+                    </div>
+                    <div class="roster-cell" onmouseover="previewCharacter('inferno', 'Inferno', '#ff0000')" onclick="selectCharacter('inferno')">
+                        <div class="cell-inner" style="background: linear-gradient(0deg, #ff0000 0%, #111 60%);"></div>
+                    </div>
+                    <div class="roster-cell" onmouseover="previewCharacter('frost', 'Frost', '#00d9ff')" onclick="selectCharacter('frost')">
+                        <div class="cell-inner" style="background: linear-gradient(0deg, #00d9ff 0%, #111 60%);"></div>
+                    </div>
+                    <div class="roster-cell" onmouseover="previewCharacter('gold', 'Gold', '#ffea00')" onclick="selectCharacter('gold')">
+                        <div class="cell-inner" style="background: linear-gradient(0deg, #ffea00 0%, #111 60%);"></div>
+                    </div>
+                    
+                    <!-- Slots Falsos (Para parecer um jogo grande) -->
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
+                    
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
+                    <div class="roster-cell locked"><div class="cell-inner"></div></div>
                 </div>
-                <div class="char-card" onclick="selectCharacter('frost')">
-                    <div class="char-color" style="background:#00d9ff; box-shadow: 0 0 20px #00d9ff;"></div>
-                    <h3>Frost (Azul)</h3>
-                    <p>Mago</p>
-                </div>
-                <div class="char-card" onclick="selectCharacter('gold')">
-                    <div class="char-color" style="background:#ffea00; box-shadow: 0 0 20px #ffea00;"></div>
-                    <h3>Gold (Amarelo)</h3>
-                    <p>Balanceado</p>
+
+                <!-- Player 2 Portrait -->
+                <div class="portrait-side p2-side">
+                    <h2 id="p2-preview-name">CPU</h2>
+                    <div class="big-portrait" id="p2-big-portrait">
+                        <div class="portrait-silhouette" style="background: #333; box-shadow: none;">?</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Overlay UI (HUD) - Oculto até escolher -->
+        <!-- Overlay HUD - Oculto até começar -->
         <div id="ui-layer" style="display: none;">
             <div id="level-display">Level <span id="level-number">1</span></div>
             <div id="status-bars">
-                <!-- Player 1 -->
                 <div class="player-status player-1">
                     <div class="health-bar-container">
                         <div class="health-bar" id="p1-health"></div>
@@ -55,10 +77,8 @@
                     <div class="player-name" id="p1-name">Jogador</div>
                 </div>
 
-                <!-- Timer -->
                 <div id="timer">60</div>
 
-                <!-- Player 2 -->
                 <div class="player-status player-2">
                     <div class="health-bar-container">
                         <div class="health-bar" id="p2-health"></div>
@@ -67,7 +87,7 @@
                     <div class="mana-bar-container">
                         <div class="mana-bar" id="p2-mana"></div>
                     </div>
-                    <div class="player-name" id="p2-name">Oponente IA</div>
+                    <div class="player-name" id="p2-name">Aguardando CPU</div>
                 </div>
             </div>
             
@@ -79,7 +99,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="sprites.js?v=6"></script>
-    <script src="game.js?v=6"></script>
+    <script src="sprites.js?v=8"></script>
+    <script src="game.js?v=8"></script>
 </body>
 </html>

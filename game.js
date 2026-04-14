@@ -21,7 +21,7 @@ let player = new Fighter({
     position: { x: 100, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#00ff00',
-    offset: { x: 50, y: 50 },
+    offset: { x: 100, y: 50 },
     width: 200, height: 250
 });
 
@@ -29,25 +29,14 @@ let enemy = new Fighter({
     position: { x: 700, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#ff0000',
-    offset: { x: -80, y: 50 },
+    offset: { x: -150, y: 50 },
     width: 200, height: 250
 });
 
 const keys = { a: { pressed: false }, d: { pressed: false } };
 let particles = [];
-let ambientParticles = []; // Neve/Fagulhas de fundo
+let ambientParticles = []; 
 let screenShake = 0;
-
-function createAmbientParticles() {
-    if (ambientParticles.length < 50) {
-        ambientParticles.push(new Particle({
-            position: { x: Math.random() * 1024, y: -20 },
-            velocity: { x: (Math.random() - 0.5) * 2, y: Math.random() * 3 + 1 },
-            color: 'rgba(255, 255, 255, 0.2)', size: Math.random() * 3,
-            fadeSpeed: 0.005
-        }));
-    }
-}
 
 // AUDIO SYNTH
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -115,7 +104,6 @@ window.selectCharacter = function(charKey) {
     player.image.src = `assets/${charKey}.png`;
     document.getElementById('p1-name').innerText = charKey.toUpperCase();
     
-    // Sortear Inimigo
     const ks = Object.keys(CHARACTERS);
     const ak = ks[Math.floor(Math.random() * ks.length)];
     enemy.color = CHARACTERS[ak].color; enemy.speed = CHARACTERS[ak].speed; enemy.dmgMult = CHARACTERS[ak].dmgBase;
@@ -123,6 +111,7 @@ window.selectCharacter = function(charKey) {
     document.getElementById('p2-name').innerText = "CPU " + ak.toUpperCase();
     
     isStarted = true;
+    updateUI();
     if (gameMode === 'tutorial') startTutorial(); else decreaseTimer();
 };
 
@@ -145,8 +134,13 @@ function updateTutorialLogic(k) {
 function determineWinner() {
     gameFinished = true; clearTimeout(timerId);
     const m = document.getElementById('message-display'); m.style.display = 'block';
-    if (player.health > enemy.health) { m.innerHTML = "VENCEU!"; setTimeout(() => { level++; resetLevel(); }, 2000); }
-    else { m.innerHTML = "DERROTA"; setTimeout(resetLevel, 2000); }
+    if (player.health > enemy.health) { 
+        m.innerHTML = "VENCEU!"; 
+        setTimeout(() => { level++; resetLevel(); }, 2000); 
+    } else { 
+        m.innerHTML = "DERROTA"; 
+        setTimeout(resetLevel, 2000); 
+    }
 }
 
 function resetLevel() {
@@ -156,6 +150,7 @@ function resetLevel() {
     const ks = Object.keys(CHARACTERS);
     const ak = ks[Math.floor(Math.random() * ks.length)];
     enemy.image.src = `assets/${ak}.png`; enemy.color = CHARACTERS[ak].color;
+    enemy.dmgMult = CHARACTERS[ak].dmgBase; enemy.speed = CHARACTERS[ak].speed;
     document.getElementById('level-number').innerText = level;
     updateUI(); if (gameMode !== 'tutorial') decreaseTimer();
 }
@@ -164,11 +159,10 @@ function updateUI() {
     document.getElementById('p1-health').style.width = player.health + '%';
     document.getElementById('p2-health').style.width = enemy.health + '%';
     
-    // Ghost bar (drena devagar para efeito visual)
     setTimeout(() => {
-        document.getElementById('p1-health-bg').style.width = player.health + '%';
-        document.getElementById('p2-health-bg').style.width = enemy.health + '%';
-    }, 300);
+        if(document.getElementById('p1-health-bg')) document.getElementById('p1-health-bg').style.width = player.health + '%';
+        if(document.getElementById('p2-health-bg')) document.getElementById('p2-health-bg').style.width = enemy.health + '%';
+    }, 400);
 
     document.getElementById('p1-mana').style.width = player.mana + '%';
     document.getElementById('p2-mana').style.width = enemy.mana + '%';
@@ -177,7 +171,7 @@ function updateUI() {
 function checkHit(atk, def) {
     if (rectangularCollision({ rectangle1: atk, rectangle2: def }) && atk.isAttacking) {
         atk.isAttacking = false;
-        def.takeHit(atk.damage * atk.dmgMult);
+        def.takeHit(atk.damage * (atk.dmgMult || 1));
         atk.mana = Math.min(100, atk.mana + 15);
         createHitFx(def.position.x + def.width/2, def.position.y + def.height/2, atk.color);
         playSFX(150, 'square', 0.1); 
@@ -187,6 +181,17 @@ function checkHit(atk, def) {
 }
 
 const bg = new Image(); bg.src = 'assets/bg.png';
+
+function createAmbientParticles() {
+    if (ambientParticles.length < 50) {
+        ambientParticles.push(new Particle({
+            position: { x: Math.random() * 1024, y: -20 },
+            velocity: { x: (Math.random() - 0.5) * 2, y: Math.random() * 3 + 1 },
+            color: 'rgba(255, 255, 255, 0.2)', size: Math.random() * 3,
+            fadeSpeed: 0.005
+        }));
+    }
+}
 
 function animate() {
     window.requestAnimationFrame(animate);
@@ -200,12 +205,8 @@ function animate() {
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.globalAlpha = 1;
     }
     
-    // Partículas de Ambiente
     createAmbientParticles();
-    ambientParticles.forEach((p, i) => { 
-        if (p.alpha <= 0 || p.position.y > 600) ambientParticles.splice(i, 1); 
-        else p.update(ctx); 
-    });
+    ambientParticles.forEach((p, i) => { if (p.alpha <= 0 || p.position.y > 600) ambientParticles.splice(i, 1); else p.update(ctx); });
 
     player.update(ctx, canvas.height);
     enemy.update(ctx, canvas.height);
@@ -214,13 +215,13 @@ function animate() {
     if (keys.a.pressed) player.velocity.x = -player.speed;
     else if (keys.d.pressed) player.velocity.x = player.speed;
 
-    player.attackBox.offset.x = player.position.x < enemy.position.x ? 50 : -180;
-    enemy.attackBox.offset.x = enemy.position.x < player.position.x ? 50 : -180;
+    // OFFSSETS DE ATAQUE CORRIGIDOS PARA PERSONAGENS LARGOS (200px)
+    player.attackBox.offset.x = player.position.x < enemy.position.x ? 120 : -180;
+    enemy.attackBox.offset.x = enemy.position.x < player.position.x ? 120 : -180;
 
-    // AI MASTER
     if (isStarted && !gameFinished && gameMode !== 'tutorial') {
         const d = player.position.x - enemy.position.x;
-        if (Math.abs(d) > 180) enemy.velocity.x = d > 0 ? 3 + level*0.5 : -3 - level*0.5;
+        if (Math.abs(d) > 150) enemy.velocity.x = d > 0 ? 3 + level*0.5 : -3 - level*0.5;
         else {
             enemy.velocity.x = 0;
             if (Math.random() < 0.03 + level*0.01) { enemy.attack('punch'); checkHit(enemy, player); }
@@ -238,7 +239,7 @@ window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     if (gameMode === 'tutorial') updateTutorialLogic(k);
     if (k === 'a') keys.a.pressed = true; if (k === 'd') keys.d.pressed = true;
-    if (k === 'w' && player.isGrounded) { player.velocity.y = -18; playSFX(300, 'sine', 0.1); }
+    if (k === 'w' && player.isGrounded) { player.velocity.y = -20; playSFX(300, 'sine', 0.1); }
     if (k === 'j') { player.attack('punch'); checkHit(player, enemy); playSFX(200, 'triangle', 0.1); }
     if (k === 'k') { player.attack('kick'); checkHit(player, enemy); playSFX(180, 'triangle', 0.1); }
     if (k === 'l' && player.mana >= 100) { player.attack('special'); checkHit(player, enemy); playSFX(500, 'sawtooth', 0.2); }

@@ -2,9 +2,6 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
 let level = 1;
-let aiReactionDelay = 500;
-let aiDamageMultiplier = 1;
-
 let timer = 60;
 let timerId;
 let gameFinished = false;
@@ -12,12 +9,12 @@ let isStarted = false;
 let gameMode = 'arcade';
 let tutorialStep = 0;
 
-// Configs dos personagens
 const CHARACTERS = {
-    'hanzo': { color: '#555555', speed: 6, dmgBase: 1, manaRegen: 1 },
-    'ignis': { color: '#ff3300', speed: 4, dmgBase: 1.5, manaRegen: 1 },
-    'glacius': { color: '#00d9ff', speed: 5, dmgBase: 1.2, manaRegen: 1.5 },
-    'aurum': { color: '#ffea00', speed: 5, dmgBase: 1.2, manaRegen: 1.2 }
+    'hanzo': { color: '#555555', speed: 6, dmgBase: 1.0 },
+    'ignis': { color: '#ff3300', speed: 4.5, dmgBase: 1.5 },
+    'glacius': { color: '#00d9ff', speed: 5.5, dmgBase: 1.2 },
+    'aurum': { color: '#ffea00', speed: 3.8, dmgBase: 1.8 },
+    'nova': { color: '#a200ff', speed: 7.5, dmgBase: 0.8 }
 };
 
 let player = new Fighter({
@@ -25,8 +22,7 @@ let player = new Fighter({
     velocity: { x: 0, y: 0 },
     color: '#00ff00',
     offset: { x: 50, y: 50 },
-    width: 200,  // Proporção corrigida (mais largo)
-    height: 250  // Proporção corrigida (mais alto)
+    width: 200, height: 250
 });
 
 let enemy = new Fighter({
@@ -34,15 +30,48 @@ let enemy = new Fighter({
     velocity: { x: 0, y: 0 },
     color: '#ff0000',
     offset: { x: -80, y: 50 },
-    width: 200,
-    height: 250
+    width: 200, height: 250
 });
 
-const keys = {
-    a: { pressed: false },
-    d: { pressed: false },
-    w: { pressed: false }
-};
+const keys = { a: { pressed: false }, d: { pressed: false } };
+let particles = [];
+let ambientParticles = []; // Neve/Fagulhas de fundo
+let screenShake = 0;
+
+function createAmbientParticles() {
+    if (ambientParticles.length < 50) {
+        ambientParticles.push(new Particle({
+            position: { x: Math.random() * 1024, y: -20 },
+            velocity: { x: (Math.random() - 0.5) * 2, y: Math.random() * 3 + 1 },
+            color: 'rgba(255, 255, 255, 0.2)', size: Math.random() * 3,
+            fadeSpeed: 0.005
+        }));
+    }
+}
+
+// AUDIO SYNTH
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSFX(freq, type, dur) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
+}
+
+function createHitFx(x, y, color) {
+    for (let i = 0; i < 20; i++) {
+        particles.push(new Particle({
+            position: { x, y },
+            velocity: { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15 },
+            color: color, size: Math.random() * 6 + 2
+        }));
+    }
+    screenShake = 15;
+}
 
 function rectangularCollision({ rectangle1, rectangle2 }) {
     return (
@@ -54,169 +83,81 @@ function rectangularCollision({ rectangle1, rectangle2 }) {
 }
 
 function decreaseTimer() {
-    if (!isStarted) return;
-// ... (resto mantido)
+    if (!isStarted || gameFinished) return;
     if (timer > 0) {
         timerId = setTimeout(decreaseTimer, 1000);
         timer--;
         document.getElementById('timer').innerText = timer;
-    }
-
-    if (timer === 0 && !gameFinished) {
-        determineWinner({ player, enemy, timerId });
-    }
+    } else determineWinner();
 }
 
-// Logica visual de Preview na Roster
 window.previewCharacter = function(charKey, name, color) {
     document.getElementById('p1-preview-name').innerText = name;
-    
-    // Tenta carregar a imagem fantástica se o usuário a salvou!
-    let portrait = document.getElementById('p1-big-portrait');
-    portrait.style.borderColor = color;
-    portrait.style.backgroundImage = `url('assets/${charKey}.png')`;
-    portrait.style.backgroundSize = 'cover';
-    portrait.style.backgroundPosition = 'center';
-
-    // Remove a silhueta padrão se tiver imagem
+    let p = document.getElementById('p1-big-portrait');
+    p.style.borderColor = color;
+    p.style.backgroundImage = `url('assets/${charKey}.png')`;
+    p.style.backgroundSize = 'cover';
+    p.style.backgroundPosition = 'center';
     document.getElementById('p1-silhouette').style.display = 'none';
 };
 
-window.setMode = function(mode) {
-    gameMode = mode;
-    document.getElementById('btn-arcade').classList.remove('active');
-    document.getElementById('btn-tutorial').classList.remove('active');
-    document.getElementById('btn-' + mode).classList.add('active');
+window.setMode = function(m) {
+    gameMode = m;
+    document.getElementById('btn-arcade').classList.toggle('active', m === 'arcade');
+    document.getElementById('btn-tutorial').classList.toggle('active', m === 'tutorial');
 };
 
-// Lançado via onclick do HTML 
 window.selectCharacter = function(charKey) {
     document.getElementById('char-select').style.display = 'none';
     document.getElementById('ui-layer').style.display = 'flex';
-    
-    // Settando player
-    const pData = CHARACTERS[charKey];
-    player.color = pData.color;
-    player.dmgMult = pData.dmgBase;
-    player.speed = pData.speed;
-    player.image.src = `assets/${charKey}.png`; // Carrega a Skin
+    const d = CHARACTERS[charKey];
+    player.color = d.color; player.speed = d.speed; player.dmgMult = d.dmgBase;
+    player.image.src = `assets/${charKey}.png`;
     document.getElementById('p1-name').innerText = charKey.toUpperCase();
-
-    // Sorteando Inimigo (IA)
-    const keys = Object.keys(CHARACTERS);
-    const aiKey = keys[Math.floor(Math.random() * keys.length)];
-    const aiData = CHARACTERS[aiKey];
-    enemy.color = aiData.color;
-    enemy.dmgMult = aiData.dmgBase;
-    enemy.speed = aiData.speed;
-    enemy.image.src = `assets/${aiKey}.png`; // Carrega a Skin IA
-    document.getElementById('p2-name').innerText = "IA " + aiKey.toUpperCase();
-
-    isStarted = true;
     
-    if (gameMode === 'tutorial') {
-        startTutorial();
-    } else {
-        decreaseTimer();
-    }
+    // Sortear Inimigo
+    const ks = Object.keys(CHARACTERS);
+    const ak = ks[Math.floor(Math.random() * ks.length)];
+    enemy.color = CHARACTERS[ak].color; enemy.speed = CHARACTERS[ak].speed; enemy.dmgMult = CHARACTERS[ak].dmgBase;
+    enemy.image.src = `assets/${ak}.png`;
+    document.getElementById('p2-name').innerText = "CPU " + ak.toUpperCase();
+    
+    isStarted = true;
+    if (gameMode === 'tutorial') startTutorial(); else decreaseTimer();
 };
 
 function startTutorial() {
-    tutorialStep = 1;
-    enemy.health = 100;
-    player.health = 100;
-    player.mana = 0;
-    updateUI();
     document.getElementById('timer').innerText = "∞";
     document.getElementById('tutorial-overlay').style.display = 'block';
-    updateTutorialText("Mova-se apertando <span class='key-btn'>A</span> ou <span class='key-btn'>D</span>");
+    tutorialStep = 1; updateTutorialText("Use <span class='key-btn'>A</span> / <span class='key-btn'>D</span> para mover");
 }
 
-function updateTutorialText(txt) {
-    document.getElementById('tutorial-text').innerHTML = txt;
+function updateTutorialText(t) { document.getElementById('tutorial-text').innerHTML = t; }
+
+function updateTutorialLogic(k) {
+    if (tutorialStep === 1 && (k === 'a' || k === 'd')) { tutorialStep = 2; updateTutorialText("Pule com <span class='key-btn'>W</span>"); }
+    else if (tutorialStep === 2 && (k === 'w' || k === ' ')) { tutorialStep = 3; updateTutorialText("Soco <span class='key-btn'>J</span>"); }
+    else if (tutorialStep === 3 && k === 'j') { tutorialStep = 4; updateTutorialText("Chute <span class='key-btn'>K</span>"); }
+    else if (tutorialStep === 4 && k === 'k') { tutorialStep = 5; player.mana = 100; updateUI(); updateTutorialText("ESPECIAL <span class='key-btn'>L</span>"); }
+    else if (tutorialStep === 5 && k === 'l') { tutorialStep = 6; updateTutorialText("PRONTO!"); setTimeout(() => { resetLevel(); document.getElementById('tutorial-overlay').style.display='none'; gameMode='arcade'; }, 2000); }
 }
 
-function updateTutorialLogic(keyStr) {
-    if (tutorialStep === 1 && (keyStr === 'a' || keyStr === 'd')) {
-        tutorialStep = 2;
-        updateTutorialText("Pule apertando <span class='key-btn'>ESPAÇO</span>");
-    } else if (tutorialStep === 2 && (keyStr === ' ' || keyStr === 'w')) {
-        tutorialStep = 3;
-        updateTutorialText("Chegue perto e ataque: <span class='key-btn'>J</span> (SOCO)");
-    } else if (tutorialStep === 3 && keyStr === 'j') {
-        tutorialStep = 4;
-        updateTutorialText("Experimente o CHUTE com <span class='key-btn'>K</span>");
-    } else if (tutorialStep === 4 && keyStr === 'k') {
-        tutorialStep = 5;
-        player.mana = 100; // Enche a mana pra ele testar
-        updateUI();
-        updateTutorialText("Mana cheia! Use o ESPECIAL com <span class='key-btn'>L</span>");
-    } else if (tutorialStep === 5 && keyStr === 'l') {
-        tutorialStep = 6;
-        updateTutorialText("TUTORIAL CONCLUÍDO!");
-        setTimeout(() => {
-            document.getElementById('tutorial-overlay').style.display = 'none';
-            gameMode = 'arcade';
-            resetLevel();
-        }, 3000);
-    }
-}
-
-function determineWinner({ player, enemy, timerId }) {
-    clearTimeout(timerId);
-    gameFinished = true;
-    const messageDisplay = document.getElementById('message-display');
-    messageDisplay.style.display = 'block';
-
-    if (player.health === enemy.health) {
-        messageDisplay.innerHTML = 'Empate';
-        setTimeout(resetLevel, 2000);
-    } else if (player.health > enemy.health) {
-        messageDisplay.innerHTML = 'Você Venceu!';
-        setTimeout(nextLevel, 2000);
-    } else if (player.health < enemy.health) {
-        messageDisplay.innerHTML = 'IA Venceu';
-        setTimeout(resetLevel, 2000);
-    }
-}
-
-function nextLevel() {
-    level++;
-    aiReactionDelay = Math.max(100, 500 - (level - 1) * 100);
-    aiDamageMultiplier = 1 + (level - 1) * 0.1;
-    document.getElementById('level-number').innerText = level;
-    resetGameStats();
+function determineWinner() {
+    gameFinished = true; clearTimeout(timerId);
+    const m = document.getElementById('message-display'); m.style.display = 'block';
+    if (player.health > enemy.health) { m.innerHTML = "VENCEU!"; setTimeout(() => { level++; resetLevel(); }, 2000); }
+    else { m.innerHTML = "DERROTA"; setTimeout(resetLevel, 2000); }
 }
 
 function resetLevel() {
-    resetGameStats();
-}
-
-function resetGameStats() {
-    player.dead = false;
-    player.position = { x: 200, y: 0 };
-    
-    enemy.health = 100;
-    enemy.mana = 0;
-    enemy.dead = false;
-    enemy.position = { x: 800, y: 0 };
-    
-    // Sortear um novo vilão no Next Level?!
-    const keys = Object.keys(CHARACTERS);
-    const aiKey = keys[Math.floor(Math.random() * keys.length)];
-    enemy.color = CHARACTERS[aiKey].color;
-    enemy.image.src = `assets/${aiKey}.png`; // Troca skin IA no level up
-    document.getElementById('p2-name').innerText = "IA " + aiKey.toUpperCase();
-    
-    timer = 60;
-    document.getElementById('timer').innerText = timer;
-    document.getElementById('message-display').style.display = 'none';
-    gameFinished = false;
-    
-    clearTimeout(timerId);
-    decreaseTimer();
-    
-    updateUI();
+    player.health = 100; player.mana = 0; player.position.x = 100; player.dead = false;
+    enemy.health = 100; enemy.mana = 0; enemy.position.x = 700; enemy.dead = false;
+    timer = 60; gameFinished = false; document.getElementById('message-display').style.display='none';
+    const ks = Object.keys(CHARACTERS);
+    const ak = ks[Math.floor(Math.random() * ks.length)];
+    enemy.image.src = `assets/${ak}.png`; enemy.color = CHARACTERS[ak].color;
+    document.getElementById('level-number').innerText = level;
+    updateUI(); if (gameMode !== 'tutorial') decreaseTimer();
 }
 
 function updateUI() {
@@ -226,157 +167,76 @@ function updateUI() {
     document.getElementById('p2-mana').style.width = enemy.mana + '%';
 }
 
-let lastAiCall = 0;
-function aiLogic(currentTime) {
-    if (gameFinished || enemy.dead || player.dead || gameMode === 'tutorial') return;
-
-    if (currentTime - lastAiCall < aiReactionDelay) return;
-    lastAiCall = currentTime;
-
-    const distance = player.position.x - enemy.position.x;
-    
-    if (Math.abs(distance) > 120) {
-        if (distance > 0) {
-            enemy.velocity.x = 4;
-        } else {
-            enemy.velocity.x = -4;
-        }
-    } else {
-        enemy.velocity.x = 0;
-        
-        const action = Math.random();
-        if (action < 0.4) {
-            enemy.attack('punch');
-            checkHit(enemy, player, aiDamageMultiplier);
-        } else if (action < 0.6) {
-            enemy.attack('kick');
-            checkHit(enemy, player, aiDamageMultiplier);
-        } else if (action < 0.7 && enemy.mana >= 100) {
-            enemy.attack('special');
-            checkHit(enemy, player, aiDamageMultiplier);
-        }
-    }
-}
-
-function checkHit(attacker, defender, multiplier = 1) {
-    if (
-        rectangularCollision({
-            rectangle1: attacker,
-            rectangle2: defender
-        }) &&
-        attacker.isAttacking
-    ) {
-        attacker.isAttacking = false;
-        defender.takeHit(attacker.damage * multiplier);
-        attacker.mana = Math.min(100, attacker.mana + 15);
-        defender.mana = Math.min(100, defender.mana + 10);
+function checkHit(atk, def) {
+    if (rectangularCollision({ rectangle1: atk, rectangle2: def }) && atk.isAttacking) {
+        atk.isAttacking = false;
+        def.takeHit(atk.damage * atk.dmgMult);
+        atk.mana = Math.min(100, atk.mana + 15);
+        createHitFx(def.position.x + def.width/2, def.position.y + def.height/2, atk.color);
+        playSFX(150, 'square', 0.1); 
         updateUI();
-
-        if (defender.health <= 0) {
-            determineWinner({ player, enemy, timerId });
-        }
+        if (def.health <= 0) determineWinner();
     }
 }
 
-const bgColors = ['#222222', '#331111', '#113311', '#111133', '#333311'];
+const bg = new Image(); bg.src = 'assets/bg.png';
 
-const bgImage = new Image();
-bgImage.src = 'assets/bg.png';
-
-function animate(currentTime) {
+function animate() {
     window.requestAnimationFrame(animate);
+    ctx.clearRect(0,0, canvas.width, canvas.height);
     
-    if (bgImage.complete && bgImage.naturalWidth !== 0) {
-        ctx.globalAlpha = 0.5 + (0.1 * level); // Fica um pouco mais escuro ou diferente
-        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1.0;
-        
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    } else {
-        ctx.fillStyle = bgColors[(level - 1) % bgColors.length] || '#222222';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    if (screenShake > 0) { ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake); screenShake *= 0.8; }
+    
+    if (bg.complete) {
+        ctx.globalAlpha = 0.3; ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.globalAlpha = 1;
     }
-
-    // Renderizar "Chão"
-    const floorGradient = ctx.createLinearGradient(0, canvas.height - 50, 0, canvas.height);
-    floorGradient.addColorStop(0, '#444');
-    floorGradient.addColorStop(1, '#111');
-    ctx.fillStyle = floorGradient;
-    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+    
+    // Partículas de Ambiente
+    createAmbientParticles();
+    ambientParticles.forEach((p, i) => { 
+        if (p.alpha <= 0 || p.position.y > 600) ambientParticles.splice(i, 1); 
+        else p.update(ctx); 
+    });
 
     player.update(ctx, canvas.height);
     enemy.update(ctx, canvas.height);
 
     player.velocity.x = 0;
-    let baseSpeed = player.speed || 5;
-    if (keys.a.pressed && player.position.x > 0) {
-        player.velocity.x = -baseSpeed;
-    } else if (keys.d.pressed && player.position.x < canvas.width - player.width) {
-        player.velocity.x = baseSpeed;
+    if (keys.a.pressed) player.velocity.x = -player.speed;
+    else if (keys.d.pressed) player.velocity.x = player.speed;
+
+    player.attackBox.offset.x = player.position.x < enemy.position.x ? 50 : -180;
+    enemy.attackBox.offset.x = enemy.position.x < player.position.x ? 50 : -180;
+
+    // AI MASTER
+    if (isStarted && !gameFinished && gameMode !== 'tutorial') {
+        const d = player.position.x - enemy.position.x;
+        if (Math.abs(d) > 180) enemy.velocity.x = d > 0 ? 3 + level*0.5 : -3 - level*0.5;
+        else {
+            enemy.velocity.x = 0;
+            if (Math.random() < 0.03 + level*0.01) { enemy.attack('punch'); checkHit(enemy, player); }
+        }
     }
 
-    if (player.position.x < enemy.position.x) {
-        player.attackBox.offset.x = 0;
-        enemy.attackBox.offset.x = -50;
-    } else {
-        player.attackBox.offset.x = -50;
-        enemy.attackBox.offset.x = 0;
-    }
-
-    aiLogic(currentTime);
+    particles.forEach((p, i) => { if (p.life <= 0) particles.splice(i, 1); else p.update(ctx); });
+    ctx.restore();
 }
 
-animate(0);
+animate();
 
-window.addEventListener('keydown', (event) => {
-    if (!player.dead && !gameFinished) {
-        let k = event.key.toLowerCase();
-        if (gameMode === 'tutorial') {
-            updateTutorialLogic(k);
-        }
-
-        switch (k) {
-            case 'd':
-            case 'arrowright':
-                keys.d.pressed = true;
-                break;
-            case 'a':
-            case 'arrowleft':
-                keys.a.pressed = true;
-                break;
-            case 'w':
-            case 'arrowup':
-            case ' ':
-                if (player.isGrounded) player.velocity.y = -15;
-                break;
-            case 'j':
-                player.attack('punch');
-                checkHit(player, enemy);
-                break;
-            case 'k':
-                player.attack('kick');
-                checkHit(player, enemy);
-                break;
-            case 'l':
-                if (player.mana >= 100) {
-                    player.attack('special');
-                    checkHit(player, enemy);
-                }
-                break;
-        }
-    }
+window.addEventListener('keydown', (e) => {
+    if (player.dead || gameFinished) return;
+    const k = e.key.toLowerCase();
+    if (gameMode === 'tutorial') updateTutorialLogic(k);
+    if (k === 'a') keys.a.pressed = true; if (k === 'd') keys.d.pressed = true;
+    if (k === 'w' && player.isGrounded) { player.velocity.y = -18; playSFX(300, 'sine', 0.1); }
+    if (k === 'j') { player.attack('punch'); checkHit(player, enemy); playSFX(200, 'triangle', 0.1); }
+    if (k === 'k') { player.attack('kick'); checkHit(player, enemy); playSFX(180, 'triangle', 0.1); }
+    if (k === 'l' && player.mana >= 100) { player.attack('special'); checkHit(player, enemy); playSFX(500, 'sawtooth', 0.2); }
 });
-
-window.addEventListener('keyup', (event) => {
-    switch (event.key.toLowerCase()) {
-        case 'd':
-        case 'arrowright':
-            keys.d.pressed = false;
-            break;
-        case 'a':
-        case 'arrowleft':
-            keys.a.pressed = false;
-            break;
-    }
+window.addEventListener('keyup', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'a') keys.a.pressed = false; if (k === 'd') keys.d.pressed = false;
 });

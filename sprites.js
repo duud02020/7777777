@@ -1,42 +1,59 @@
+class Particle {
+    constructor({ position, velocity, color, size, fadeSpeed = 0.05 }) {
+        this.position = { ...position };
+        this.velocity = { ...velocity };
+        this.color = color;
+        this.size = size;
+        this.alpha = 1;
+        this.fadeSpeed = fadeSpeed;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.position.x, this.position.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    update(ctx) {
+        this.draw(ctx);
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+        this.alpha -= this.fadeSpeed;
+    }
+}
+
+class Sprite {
     constructor({ position, width, height, color, imageSrc }) {
         this.position = position;
         this.width = width;
         this.height = height;
         this.color = color;
         this.image = new Image();
-        this.processedImage = null; // Versão sem fundo
+        this.processedImage = null; 
         
         if (imageSrc) {
             this.image.src = imageSrc;
-            this.image.onload = () => {
-                this.removeBackground();
-            };
+            this.image.onload = () => { this.removeBackground(); };
         }
     }
 
     removeBackground() {
-        // Criar um canvas temporário para processar a imagem
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
         tempCanvas.width = this.image.width;
         tempCanvas.height = this.image.height;
-        
         tempCtx.drawImage(this.image, 0, 0);
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
         const data = imgData.data;
-
-        // Chroma Key: Se os pixels forem quase brancos, deixa transparente (Alpha = 0)
         for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            
-            // Aumentando a sensibilidade para pegar sombras leves do fundo branco
-            if (r > 200 && g > 200 && b > 200) {
-                data[i + 3] = 0;
-            }
+            if (data[i] > 200 && data[i+1] > 200 && data[i+2] > 200) data[i+3] = 0;
         }
-
         tempCtx.putImageData(imgData, 0, 0);
         this.processedImage = new Image();
         this.processedImage.src = tempCanvas.toDataURL();
@@ -44,153 +61,91 @@
 
     draw(ctx) {
         let drawImg = this.processedImage || (this.image.complete ? this.image : null);
-        
-        if (drawImg && drawImg.src) {
-            ctx.drawImage(drawImg, this.position.x, this.position.y, this.width, this.height);
-        } else {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
-        }
-    }
-    update(ctx) {
-        this.draw(ctx);
+        if (drawImg) ctx.drawImage(drawImg, this.position.x, this.position.y, this.width, this.height);
     }
 }
 
 class Fighter extends Sprite {
-    constructor({ position, velocity, width = 50, height = 150, color, offset = {x: 0, y: 0}, imageSrc }) {
+    constructor({ position, velocity, width = 200, height = 250, color, offset = {x: 0, y: 0}, imageSrc }) {
         super({ position, width, height, color, imageSrc });
         this.velocity = velocity;
-        this.gravity = 0.7;
+        this.gravity = 0.8;
         this.isGrounded = false;
-        
         this.health = 100;
         this.mana = 0;
-        
-        this.attackBox = {
-            position: { x: this.position.x, y: this.position.y },
-            offset,
-            width: 100,
-            height: 50
-        };
+        this.attackBox = { position: { x: this.position.x, y: this.position.y }, offset, width: 120, height: 60 };
         this.isAttacking = false;
         this.attackType = null;
-        this.damage = 10;
         this.dead = false;
+        this.isHit = false;
+        this.speed = 5;
+        this.dmgMult = 1;
+        
+        // ANIMAÇÃO PROCEDURAL
+        this.animTimer = 0;
+        this.scaleY = 1;
+        this.tilt = 0;
+        this.rotation = 0;
     }
 
     draw(ctx) {
-        // Se tiver imagem (SKIN), desenha ela em vez de palitinho
         let drawImg = this.processedImage || (this.image.complete ? this.image : null);
-        
-        if (drawImg && drawImg.naturalWidth !== 0) {
-            ctx.save();
-            
-            const dir = this.attackBox.offset.x === 0 ? 1 : -1;
-            if (dir === -1) {
-                ctx.translate(this.position.x + this.width, this.position.y);
-                ctx.scale(-1, 1);
-                ctx.drawImage(drawImg, 0, 0, this.width, this.height);
+        this.animTimer += 0.1;
+
+        // Lógica de Deformação (Efeito de Respiração e Movimento)
+        if (!this.dead) {
+            this.scaleY = 1 + Math.sin(this.animTimer) * 0.02; // Respiração lenta
+            if (Math.abs(this.velocity.x) > 0) {
+                this.tilt = (this.velocity.x > 0 ? 0.05 : -0.05); // Inclina ao correr
             } else {
-                ctx.drawImage(drawImg, this.position.x, this.position.y, this.width, this.height);
+                this.tilt *= 0.8;
             }
-
-            // Brilho neon sutil em volta da imagem da skin
-            ctx.shadowColor = this.color;
-            ctx.shadowBlur = 20;
-            ctx.strokeStyle = this.color;
-            ctx.lineWidth = 2;
-            // Linha da Hitbox do Corpo (DEBUG)
-            ctx.strokeStyle = '#00ff00';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.position.x, this.position.y, this.width, this.height);
-            
-            ctx.restore();
-        } else {
-            // Desenho estilo "Stickman Guerreiro de Neon" (FALLBACK)
-            ctx.save();
-            ctx.shadowColor = this.color;
-            ctx.shadowBlur = 15;
-            ctx.strokeStyle = this.color;
-            ctx.lineWidth = 10;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            const cx = this.position.x + this.width / 2;
-            const cy = this.position.y;
-            
-            // Direção que o jogador está virado (baseada no offset do attackBox no game.js)
-            const dir = this.attackBox.offset.x === 0 ? 1 : -1;
-            
-            ctx.beginPath();
-            
-            // Cabeça
-            ctx.arc(cx, cy + 25, 18, 0, Math.PI * 2);
-            
-            // Corpo/Coluna
-            ctx.moveTo(cx, cy + 43);
-            ctx.lineTo(cx, cy + 90);
-            
-            // Perna de Trás
-            ctx.moveTo(cx, cy + 90);
-            ctx.lineTo(cx - 20 * dir, cy + 140);
-
-            // Perna da Frente (com animação de chute)
-            ctx.moveTo(cx, cy + 90);
-            if (this.isAttacking && this.attackType === 'kick') {
-                ctx.lineTo(cx + 60 * dir, cy + 80); // Chute alto
-            } else {
-                ctx.lineTo(cx + 25 * dir, cy + 140); // Base normal
+            if (!this.isGrounded) {
+                this.scaleY = 1.1; // Estica no ar
             }
-            
-            // Braço de Trás
-            ctx.moveTo(cx, cy + 55);
-            ctx.lineTo(cx - 20 * dir, cy + 85);
-            
-            // Braço da Frente (com animação de soco/especial)
-            ctx.moveTo(cx, cy + 55);
-            if (this.isAttacking) {
-                if (this.attackType === 'punch') {
-                    ctx.lineTo(cx + 60 * dir, cy + 55); // Soco reto
-                } else if (this.attackType === 'special') {
-                    ctx.lineTo(cx + 50 * dir, cy + 30); // Gancho/especial
-                } else {
-                    ctx.lineTo(cx + 25 * dir, cy + 75); // Normal no chute
-                }
-            } else {
-                ctx.lineTo(cx + 25 * dir, cy + 75); // Guarda alta
-            }
-            
-            ctx.stroke();
-
-            // Olho (Brilho focado)
-            ctx.fillStyle = '#fff';
-            ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.arc(cx + 8 * dir, cy + 20, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
         }
 
-        // Hitbox Visual de Ataque (Impacto)
+        ctx.save();
+        
+        // Aplica transformações no centro do personagem
+        const midX = this.position.x + this.width / 2;
+        const midY = this.position.y + this.height;
+        ctx.translate(midX, midY);
+        
+        if (this.isHit) {
+            ctx.filter = 'brightness(5) contrast(2)';
+            ctx.translate((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
+        }
+
+        ctx.rotate(this.tilt + this.rotation);
+        ctx.scale(1, this.scaleY);
+        
+        // Direção
+        const dir = this.attackBox.offset.x >= 0 ? 1 : -1;
+        ctx.scale(dir, 1);
+
+        if (drawImg && drawImg.naturalWidth !== 0) {
+            ctx.drawImage(drawImg, -this.width / 2, -this.height, this.width, this.height);
+        }
+        
+        ctx.restore();
+
+        // FX de Ataque (Animação Visual)
         if (this.isAttacking) {
             ctx.save();
-            ctx.strokeStyle = '#ff0000'; // Vermelho para ataque
-            ctx.lineWidth = 3;
-            ctx.strokeRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
-            
-            // Efeito visual de preenchimento
-            ctx.fillStyle = (this.attackType === 'special') ? 'rgba(0, 255, 255, 0.4)' : 'rgba(255, 0, 0, 0.2)';
-            ctx.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = this.color;
+            ctx.fillStyle = (this.attackType === 'special') ? 'rgba(0, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)';
+            // Desenha um "flash" de ataque na frente
+            ctx.beginPath();
+            ctx.arc(this.attackBox.position.x + this.attackBox.width/2, this.attackBox.position.y + this.attackBox.height/2, 40, 0, Math.PI*2);
+            ctx.fill();
             ctx.restore();
         }
     }
 
     update(ctx, canvasHeight) {
         this.draw(ctx);
-        
         if (this.dead) return;
 
         this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
@@ -199,7 +154,6 @@ class Fighter extends Sprite {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
 
-        // Gravidade e chão
         if (this.position.y + this.height + this.velocity.y >= canvasHeight - 50) {
             this.velocity.y = 0;
             this.position.y = canvasHeight - 50 - this.height;
@@ -208,8 +162,7 @@ class Fighter extends Sprite {
             this.velocity.y += this.gravity;
             this.isGrounded = false;
         }
-        
-        // Paredes laterais
+
         if (this.position.x < 0) this.position.x = 0;
         if (this.position.x + this.width > 1024) this.position.x = 1024 - this.width;
     }
@@ -217,27 +170,30 @@ class Fighter extends Sprite {
     attack(type) {
         this.isAttacking = true;
         this.attackType = type;
-        if (type === 'punch') {
-            this.damage = 10;
-            this.attackBox.width = 100;
-        } else if (type === 'kick') {
-            this.damage = 15;
-            this.attackBox.width = 120;
-        } else if (type === 'special') {
-            this.damage = 30;
-            this.mana = 0;
-            this.attackBox.width = 150;
-        }
-        setTimeout(() => {
-            this.isAttacking = false;
+        
+        // Animação de Avanço no ataque
+        const dir = this.attackBox.offset.x >= 0 ? 1 : -1;
+        this.rotation = 0.1 * dir;
+        this.position.x += 15 * dir;
+
+        if (type === 'punch') { this.attackBox.width = 160; }
+        else if (type === 'kick') { this.attackBox.width = 190; }
+        else if (type === 'special') { this.attackBox.width = 280; this.mana = 0; }
+        
+        setTimeout(() => { 
+            this.isAttacking = false; 
+            this.rotation = 0;
         }, 150);
     }
     
     takeHit(damage) {
         this.health -= damage;
-        if (this.health <= 0) {
-            this.health = 0;
-            this.dead = true;
-        }
+        this.isHit = true;
+        // Recuo no hit
+        const dir = this.attackBox.offset.x >= 0 ? -1 : 1;
+        this.position.x += 20 * dir;
+        
+        setTimeout(() => { this.isHit = false; }, 120);
+        if (this.health <= 0) { this.health = 0; this.dead = true; }
     }
 }

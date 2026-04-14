@@ -163,6 +163,13 @@ function resetLevel() {
 function updateUI() {
     document.getElementById('p1-health').style.width = player.health + '%';
     document.getElementById('p2-health').style.width = enemy.health + '%';
+    
+    // Ghost bar (drena devagar para efeito visual)
+    setTimeout(() => {
+        document.getElementById('p1-health-bg').style.width = player.health + '%';
+        document.getElementById('p2-health-bg').style.width = enemy.health + '%';
+    }, 300);
+
     document.getElementById('p1-mana').style.width = player.mana + '%';
     document.getElementById('p2-mana').style.width = enemy.mana + '%';
 }

@@ -17,6 +17,13 @@
             <div class="vs-header">SHADOW DUEL<br><span>CHARACTER SELECT</span></div>
             
             <div class="selection-arena">
+                
+                <!-- Botões de Modo em cima da Arena -->
+                <div class="mode-select-container" style="position: absolute; top: 110px; width: 100%; text-align: center; left: 0; z-index: 100;">
+                    <button class="mode-btn active" id="btn-arcade" onclick="setMode('arcade')">🎮 ARCADE</button>
+                    <button class="mode-btn" id="btn-tutorial" onclick="setMode('tutorial')">🎓 TUTORIAL</button>
+                </div>
+
                 <!-- Player 1 Portrait -->
                 <div class="portrait-side p1-side">
                     <h2 id="p1-preview-name">ESCOLHA...</h2>
@@ -92,6 +99,13 @@
             </div>
             
             <div id="message-display" style="display: none;">Fight!</div>
+            
+            <!-- Tutorial Helper Overlay -->
+            <div id="tutorial-overlay" style="display: none; position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(0,255,255,0.2); border: 2px solid #00d9ff; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 0 20px rgba(0,255,255,0.4); z-index: 10;">
+                <h3 style="font-family: 'Press Start 2P'; color: #00d9ff; margin-bottom: 10px; font-size: 16px;">TUTORIAL</h3>
+                <p id="tutorial-text" style="font-family: 'Roboto'; font-size: 20px; font-weight: bold; color: white;">Aguarde...</p>
+            </div>
+
             <div id="controls-hint">P1: W/A/S/D Mover | Space Pular | J: Soco, K: Chute, L: Especial</div>
         </div>
 

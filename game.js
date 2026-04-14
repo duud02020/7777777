@@ -9,6 +9,8 @@ let timer = 60;
 let timerId;
 let gameFinished = false;
 let isStarted = false;
+let gameMode = 'arcade';
+let tutorialStep = 0;
 
 // Configs dos personagens
 const CHARACTERS = {
@@ -70,6 +72,13 @@ window.previewCharacter = function(charKey, name, color) {
     document.getElementById('p1-big-portrait').style.borderColor = color;
 };
 
+window.setMode = function(mode) {
+    gameMode = mode;
+    document.getElementById('btn-arcade').classList.remove('active');
+    document.getElementById('btn-tutorial').classList.remove('active');
+    document.getElementById('btn-' + mode).classList.add('active');
+};
+
 // Lançado via onclick do HTML 
 window.selectCharacter = function(charKey) {
     document.getElementById('char-select').style.display = 'none';
@@ -92,8 +101,54 @@ window.selectCharacter = function(charKey) {
     document.getElementById('p2-name').innerText = "IA " + aiKey.toUpperCase();
 
     isStarted = true;
-    decreaseTimer();
+    
+    if (gameMode === 'tutorial') {
+        startTutorial();
+    } else {
+        decreaseTimer();
+    }
 };
+
+function startTutorial() {
+    tutorialStep = 1;
+    enemy.health = 100;
+    player.health = 100;
+    player.mana = 0;
+    updateUI();
+    document.getElementById('timer').innerText = "∞";
+    document.getElementById('tutorial-overlay').style.display = 'block';
+    updateTutorialText("Mova-se apertando A e D");
+}
+
+function updateTutorialText(txt) {
+    document.getElementById('tutorial-text').innerText = txt;
+}
+
+function updateTutorialLogic(keyStr) {
+    if (tutorialStep === 1 && (keyStr === 'a' || keyStr === 'd')) {
+        tutorialStep = 2;
+        updateTutorialText("Pule apertando ESPAÇO ou W");
+    } else if (tutorialStep === 2 && (keyStr === ' ' || keyStr === 'w')) {
+        tutorialStep = 3;
+        updateTutorialText("Chegue perto e ataque com J (SOCO)");
+    } else if (tutorialStep === 3 && keyStr === 'j') {
+        tutorialStep = 4;
+        updateTutorialText("Experimente o CHUTE com K");
+    } else if (tutorialStep === 4 && keyStr === 'k') {
+        tutorialStep = 5;
+        player.mana = 100; // Enche a mana pra ele testar
+        updateUI();
+        updateTutorialText("Mana cheia! Pressione L para o ESPECIAL");
+    } else if (tutorialStep === 5 && keyStr === 'l') {
+        tutorialStep = 6;
+        updateTutorialText("TUTORIAL CONCLUÍDO!");
+        setTimeout(() => {
+            document.getElementById('tutorial-overlay').style.display = 'none';
+            gameMode = 'arcade';
+            resetLevel();
+        }, 3000);
+    }
+}
 
 function determineWinner({ player, enemy, timerId }) {
     clearTimeout(timerId);
@@ -160,7 +215,7 @@ function updateUI() {
 
 let lastAiCall = 0;
 function aiLogic(currentTime) {
-    if (gameFinished || enemy.dead || player.dead) return;
+    if (gameFinished || enemy.dead || player.dead || gameMode === 'tutorial') return;
 
     if (currentTime - lastAiCall < aiReactionDelay) return;
     lastAiCall = currentTime;
@@ -263,7 +318,12 @@ animate(0);
 
 window.addEventListener('keydown', (event) => {
     if (!player.dead && !gameFinished) {
-        switch (event.key.toLowerCase()) {
+        let k = event.key.toLowerCase();
+        if (gameMode === 'tutorial') {
+            updateTutorialLogic(k);
+        }
+
+        switch (k) {
             case 'd':
             case 'arrowright':
                 keys.d.pressed = true;
@@ -274,8 +334,6 @@ window.addEventListener('keydown', (event) => {
                 break;
             case 'w':
             case 'arrowup':
-                if (player.isGrounded) player.velocity.y = -15;
-                break;
             case ' ':
                 if (player.isGrounded) player.velocity.y = -15;
                 break;

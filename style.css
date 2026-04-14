@@ -176,6 +176,7 @@ canvas {
 
 #status-bars {
     display: flex; justify-content: space-between; align-items: flex-start; width: 100%;
+    z-index: 100;
 }
 
 .player-status { width: 40%; display: flex; flex-direction: column; }
@@ -190,7 +191,7 @@ canvas {
     position: relative;
     overflow: hidden;
     box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    transform: skewX(-15deg); /* Estilo inclinado arcade */
+    transform: skewX(-15deg); 
 }
 
 .health-bar-red {
@@ -207,9 +208,9 @@ canvas {
     position: absolute;
     top: 0;
     height: 100%;
-    background: #ffcf40; /* Barra amarela de dano (ghost) */
+    background: #ffcf40;
     width: 100%;
-    transition: width 0.8s ease-out; /* Drena mais devagar */
+    transition: width 0.8s ease-out;
     z-index: 1;
 }
 
@@ -265,8 +266,26 @@ canvas {
     position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
     font-family: 'Press Start 2P', cursive; font-size: 64px; color: #fff;
     text-shadow: 5px 5px 0 #e94560, 0 0 30px rgba(233,69,96, 0.9);
-    text-align: center; z-index: 10;
+    text-align: center; z-index: 100;
 }
+
+/* Personagens Híbridos (DOM) - SOLUÇÃO DE TRANSPARÊNCIA */
+.fighter-sprite {
+    position: absolute;
+    width: 200px;
+    height: 250px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: multiply; /* APAGA O BRANCO AUTOMATICAMENTE */
+    filter: brightness(1.2) contrast(1.1); /* Mantém vivo */
+    transition: none;
+}
+
+#player-sprite { transform-origin: bottom center; }
+#enemy-sprite { transform-origin: bottom center; }
 
 .mode-btn {
     font-family: 'Press Start 2P', cursive;
@@ -278,24 +297,19 @@ canvas {
     border-radius: 8px;
     cursor: pointer;
     margin: 0 20px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-transform: uppercase;
-}
-
-.mode-btn:hover {
-    transform: scale(1.1);
-    border-color: #fff;
-    color: #fff;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    transition: all 0.3s;
 }
 
 .mode-btn.active {
     color: #00ffcc;
     border-color: #00ffcc;
-    background: rgba(0, 255, 204, 0.15);
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.6), inset 0 0 15px rgba(0, 255, 204, 0.3);
-    text-shadow: 0 0 10px #00ffcc;
-    transform: scale(1.15);
+}
+
+#tutorial-overlay {
+    position: absolute; top: 20%; left: 50%; 
+    transform: translateX(-50%); background: rgba(0,255,255,0.2); 
+    border: 2px solid #00d9ff; padding: 20px; border-radius: 10px; 
+    text-align: center; z-index: 1000;
 }
 
 .key-btn {
@@ -309,13 +323,10 @@ canvas {
     margin: 0 5px;
     font-family: 'Press Start 2P', monospace;
     font-size: 16px;
-    box-shadow: 0 5px 15px rgba(0, 217, 255, 0.4);
-    text-shadow: 0 0 5px rgba(255,255,255,0.8);
-    transform: translateY(-2px);
 }
 
 #controls-hint {
     position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
     font-size: 12px; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.8);
-    padding: 8px 15px; border-radius: 4px; font-weight: bold; border: 1px solid #333;
+    padding: 8px 15px; border-radius: 4px; border: 1px solid #333; z-index: 100;
 }

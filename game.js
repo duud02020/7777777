@@ -211,6 +211,42 @@ function animate() {
     player.update(ctx, canvas.height);
     enemy.update(ctx, canvas.height);
 
+    // ATUALIZAÇÃO DOS SPRITES DOM (Visual)
+    const pSprite = document.getElementById('player-sprite');
+    const eSprite = document.getElementById('enemy-sprite');
+
+    if (isStarted) {
+        // Player
+        pSprite.style.display = 'block';
+        pSprite.style.left = player.position.x + 'px';
+        pSprite.style.top = player.position.y + 'px';
+        pSprite.style.width = player.width + 'px';
+        pSprite.style.height = player.height + 'px';
+        pSprite.style.backgroundImage = `url('${player.image.src}')`;
+        
+        // Animação Procedural Player (via CSS)
+        const pDir = player.attackBox.offset.x >= 0 ? 1 : -1;
+        pSprite.style.transform = `scale(${pDir}, ${player.scaleY}) rotate(${player.tilt + player.rotation}rad)`;
+        if(player.isHit) pSprite.style.filter = "brightness(5) contrast(2)";
+        else pSprite.style.filter = "brightness(1.1) contrast(1.1)";
+
+        // Enemy
+        eSprite.style.display = 'block';
+        eSprite.style.left = enemy.position.x + 'px';
+        eSprite.style.top = enemy.position.y + 'px';
+        eSprite.style.width = enemy.width + 'px';
+        eSprite.style.height = enemy.height + 'px';
+        eSprite.style.backgroundImage = `url('${enemy.image.src}')`;
+
+        const eDir = enemy.attackBox.offset.x >= 0 ? 1 : -1;
+        eSprite.style.transform = `scale(${eDir}, ${enemy.scaleY}) rotate(${enemy.tilt + enemy.rotation}rad)`;
+        if(enemy.isHit) eSprite.style.filter = "brightness(5) contrast(2)";
+        else eSprite.style.filter = "brightness(1.1) contrast(1.1)";
+    } else {
+        pSprite.style.display = 'none';
+        eSprite.style.display = 'none';
+    }
+
     player.velocity.x = 0;
     if (keys.a.pressed) player.velocity.x = -player.speed;
     else if (keys.d.pressed) player.velocity.x = player.speed;

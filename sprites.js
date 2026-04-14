@@ -148,7 +148,8 @@ class Fighter extends Sprite {
         ctx.scale(dir, 1);
 
         if (drawImg && drawImg.naturalWidth !== 0) {
-            ctx.drawImage(drawImg, -this.width / 2, -this.height, this.width, this.height);
+            // Desenho transferido para o DOM para garantir transparência total
+            // ctx.drawImage(drawImg, -this.width / 2, -this.height, this.width, this.height);
         }
         
         ctx.restore();

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
     <div id="game-container">
@@ -73,6 +73,10 @@
             </div>
         </div>
 
+        <!-- Personagens Híbridos (Garante transparência sem bug de cores) -->
+        <div id="player-sprite" class="fighter-sprite"></div>
+        <div id="enemy-sprite" class="fighter-sprite"></div>
+
         <!-- Overlay HUD - Oculto até começar -->
         <div id="ui-layer" style="display: none;">
             <div id="level-display">Level <span id="level-number">1</span></div>
@@ -110,14 +114,14 @@
                 <p id="tutorial-text" style="font-family: 'Roboto'; font-size: 20px; font-weight: bold; color: white;">Aguarde...</p>
             </div>
 
-            <div id="controls-hint">P1: W/A/S/D Mover | Space Pular | J: Soco, K: Chute, L: Especial</div>
+            <div id="controls-hint">P1: W/A/D Mover | Space Pular | J: Soco, K: Chute, L: Especial</div>
         </div>
 
         <canvas id="game-canvas" width="1024" height="576"></canvas>
     </div>
 
     <!-- Scripts -->
-    <script src="sprites.js?v=9"></script>
-    <script src="game.js?v=9"></script>
+    <script src="sprites.js?v=11"></script>
+    <script src="game.js?v=11"></script>
 </body>
 </html>

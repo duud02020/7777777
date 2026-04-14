@@ -24,14 +24,18 @@ let player = new Fighter({
     position: { x: 200, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#00ff00',
-    offset: { x: 0, y: 0 }
+    offset: { x: 0, y: 0 },
+    width: 150,  // Aumentado para Skin
+    height: 200  // Aumentado para Skin
 });
 
 let enemy = new Fighter({
     position: { x: 800, y: 0 },
     velocity: { x: 0, y: 0 },
     color: '#ff0000',
-    offset: { x: -50, y: 0 }
+    offset: { x: -50, y: 0 },
+    width: 150,  // Aumentado para Skin
+    height: 200  // Aumentado para Skin
 });
 
 const keys = {
@@ -95,6 +99,7 @@ window.selectCharacter = function(charKey) {
     player.color = pData.color;
     player.dmgMult = pData.dmgBase;
     player.speed = pData.speed;
+    player.image.src = `assets/${charKey}.png`; // Carrega a Skin
     document.getElementById('p1-name').innerText = charKey.toUpperCase();
 
     // Sorteando Inimigo (IA)
@@ -104,6 +109,7 @@ window.selectCharacter = function(charKey) {
     enemy.color = aiData.color;
     enemy.dmgMult = aiData.dmgBase;
     enemy.speed = aiData.speed;
+    enemy.image.src = `assets/${aiKey}.png`; // Carrega a Skin IA
     document.getElementById('p2-name').innerText = "IA " + aiKey.toUpperCase();
 
     isStarted = true;
@@ -199,6 +205,7 @@ function resetGameStats() {
     const keys = Object.keys(CHARACTERS);
     const aiKey = keys[Math.floor(Math.random() * keys.length)];
     enemy.color = CHARACTERS[aiKey].color;
+    enemy.image.src = `assets/${aiKey}.png`; // Troca skin IA no level up
     document.getElementById('p2-name').innerText = "IA " + aiKey.toUpperCase();
     
     timer = 60;

@@ -1,14 +1,21 @@
 class Sprite {
-    constructor({ position, width, height, color }) {
+    constructor({ position, width, height, color, imageSrc }) {
         this.position = position;
         this.width = width;
         this.height = height;
         this.color = color;
+        this.image = new Image();
+        if (imageSrc) {
+            this.image.src = imageSrc;
+        }
     }
     draw(ctx) {
-        // Sprite default form
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+        if (this.image.src) {
+            ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        } else {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+        }
     }
     update(ctx) {
         this.draw(ctx);
@@ -16,8 +23,8 @@ class Sprite {
 }
 
 class Fighter extends Sprite {
-    constructor({ position, velocity, width = 50, height = 150, color, offset = {x: 0, y: 0} }) {
-        super({ position, width, height, color });
+    constructor({ position, velocity, width = 50, height = 150, color, offset = {x: 0, y: 0}, imageSrc }) {
+        super({ position, width, height, color, imageSrc });
         this.velocity = velocity;
         this.gravity = 0.7;
         this.isGrounded = false;
@@ -38,71 +45,95 @@ class Fighter extends Sprite {
     }
 
     draw(ctx) {
-        // Desenho estilo "Stickman Guerreiro de Neon"
-        ctx.save();
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 15;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 10;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        const cx = this.position.x + this.width / 2;
-        const cy = this.position.y;
-        
-        // Direção que o jogador está virado (baseada no offset do attackBox no game.js)
-        const dir = this.attackBox.offset.x === 0 ? 1 : -1;
-        
-        ctx.beginPath();
-        
-        // Cabeça
-        ctx.arc(cx, cy + 25, 18, 0, Math.PI * 2);
-        
-        // Corpo/Coluna
-        ctx.moveTo(cx, cy + 43);
-        ctx.lineTo(cx, cy + 90);
-        
-        // Perna de Trás
-        ctx.moveTo(cx, cy + 90);
-        ctx.lineTo(cx - 20 * dir, cy + 140);
-
-        // Perna da Frente (com animação de chute)
-        ctx.moveTo(cx, cy + 90);
-        if (this.isAttacking && this.attackType === 'kick') {
-            ctx.lineTo(cx + 60 * dir, cy + 80); // Chute alto
-        } else {
-            ctx.lineTo(cx + 25 * dir, cy + 140); // Base normal
-        }
-        
-        // Braço de Trás
-        ctx.moveTo(cx, cy + 55);
-        ctx.lineTo(cx - 20 * dir, cy + 85);
-        
-        // Braço da Frente (com animação de soco/especial)
-        ctx.moveTo(cx, cy + 55);
-        if (this.isAttacking) {
-            if (this.attackType === 'punch') {
-                ctx.lineTo(cx + 60 * dir, cy + 55); // Soco reto
-            } else if (this.attackType === 'special') {
-                ctx.lineTo(cx + 50 * dir, cy + 30); // Gancho/especial
+        // Se tiver imagem (SKIN), desenha ela em vez de palitinho
+        if (this.image.complete && this.image.naturalWidth !== 0) {
+            ctx.save();
+            
+            // Inverte a imagem se estiver olhando para a esquerda
+            const dir = this.attackBox.offset.x === 0 ? 1 : -1;
+            if (dir === -1) {
+                ctx.translate(this.position.x + this.width, this.position.y);
+                ctx.scale(-1, 1);
+                ctx.drawImage(this.image, 0, 0, this.width, this.height);
             } else {
-                ctx.lineTo(cx + 25 * dir, cy + 75); // Normal no chute
+                ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
             }
+
+            // Brilho neon em volta da imagem da skin
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 15;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 4;
+            ctx.strokeRect(this.position.x, this.position.y, this.width, this.height);
+            
+            ctx.restore();
         } else {
-            ctx.lineTo(cx + 25 * dir, cy + 75); // Guarda alta
+            // Desenho estilo "Stickman Guerreiro de Neon" (FALLBACK)
+            ctx.save();
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 15;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            const cx = this.position.x + this.width / 2;
+            const cy = this.position.y;
+            
+            // Direção que o jogador está virado (baseada no offset do attackBox no game.js)
+            const dir = this.attackBox.offset.x === 0 ? 1 : -1;
+            
+            ctx.beginPath();
+            
+            // Cabeça
+            ctx.arc(cx, cy + 25, 18, 0, Math.PI * 2);
+            
+            // Corpo/Coluna
+            ctx.moveTo(cx, cy + 43);
+            ctx.lineTo(cx, cy + 90);
+            
+            // Perna de Trás
+            ctx.moveTo(cx, cy + 90);
+            ctx.lineTo(cx - 20 * dir, cy + 140);
+
+            // Perna da Frente (com animação de chute)
+            ctx.moveTo(cx, cy + 90);
+            if (this.isAttacking && this.attackType === 'kick') {
+                ctx.lineTo(cx + 60 * dir, cy + 80); // Chute alto
+            } else {
+                ctx.lineTo(cx + 25 * dir, cy + 140); // Base normal
+            }
+            
+            // Braço de Trás
+            ctx.moveTo(cx, cy + 55);
+            ctx.lineTo(cx - 20 * dir, cy + 85);
+            
+            // Braço da Frente (com animação de soco/especial)
+            ctx.moveTo(cx, cy + 55);
+            if (this.isAttacking) {
+                if (this.attackType === 'punch') {
+                    ctx.lineTo(cx + 60 * dir, cy + 55); // Soco reto
+                } else if (this.attackType === 'special') {
+                    ctx.lineTo(cx + 50 * dir, cy + 30); // Gancho/especial
+                } else {
+                    ctx.lineTo(cx + 25 * dir, cy + 75); // Normal no chute
+                }
+            } else {
+                ctx.lineTo(cx + 25 * dir, cy + 75); // Guarda alta
+            }
+            
+            ctx.stroke();
+
+            // Olho (Brilho focado)
+            ctx.fillStyle = '#fff';
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(cx + 8 * dir, cy + 20, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
         }
-        
-        ctx.stroke();
-
-        // Olho (Brilho focado)
-        ctx.fillStyle = '#fff';
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(cx + 8 * dir, cy + 20, 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
 
         // Hitbox Visual (Impacto)
         if (this.isAttacking) {

@@ -117,28 +117,28 @@ function startTutorial() {
     updateUI();
     document.getElementById('timer').innerText = "∞";
     document.getElementById('tutorial-overlay').style.display = 'block';
-    updateTutorialText("Mova-se apertando A e D");
+    updateTutorialText("Mova-se apertando <span class='key-btn'>A</span> ou <span class='key-btn'>D</span>");
 }
 
 function updateTutorialText(txt) {
-    document.getElementById('tutorial-text').innerText = txt;
+    document.getElementById('tutorial-text').innerHTML = txt;
 }
 
 function updateTutorialLogic(keyStr) {
     if (tutorialStep === 1 && (keyStr === 'a' || keyStr === 'd')) {
         tutorialStep = 2;
-        updateTutorialText("Pule apertando ESPAÇO ou W");
+        updateTutorialText("Pule apertando <span class='key-btn'>ESPAÇO</span>");
     } else if (tutorialStep === 2 && (keyStr === ' ' || keyStr === 'w')) {
         tutorialStep = 3;
-        updateTutorialText("Chegue perto e ataque com J (SOCO)");
+        updateTutorialText("Chegue perto e ataque: <span class='key-btn'>J</span> (SOCO)");
     } else if (tutorialStep === 3 && keyStr === 'j') {
         tutorialStep = 4;
-        updateTutorialText("Experimente o CHUTE com K");
+        updateTutorialText("Experimente o CHUTE com <span class='key-btn'>K</span>");
     } else if (tutorialStep === 4 && keyStr === 'k') {
         tutorialStep = 5;
         player.mana = 100; // Enche a mana pra ele testar
         updateUI();
-        updateTutorialText("Mana cheia! Pressione L para o ESPECIAL");
+        updateTutorialText("Mana cheia! Use o ESPECIAL com <span class='key-btn'>L</span>");
     } else if (tutorialStep === 5 && keyStr === 'l') {
         tutorialStep = 6;
         updateTutorialText("TUTORIAL CONCLUÍDO!");
